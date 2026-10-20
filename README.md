@@ -2,9 +2,9 @@
 
 Content workers for ElderEase. Spring Boot 3.5, Java 21.
 
-## NewsSummaryWorker
+## NewsSummaryWorker (Anthropic API)
 
-On a schedule (default 06:00, 12:00 and 18:00 Vietnam time) the worker calls the **Anthropic API** (Messages API with
+**Off by default** (`CONTENTCREATOR_API_WORKER_ENABLED=true` turns it on; needs `ANTHROPIC_API_KEY`). On a schedule (default 06:00, 12:00 and 18:00 Vietnam time) the worker calls the **Anthropic API** (Messages API with
 the web search tool) to collect today's Vietnamese news and write a short Vietnamese summary of each story. It
 inserts them **directly into ElderEase's existing `news_summary` table** as **unpublished drafts**:
 `published = FALSE`, `country_code = 'VN'`, `language = 'vi'`, no image or audio. Nothing reaches elders until an
@@ -21,9 +21,40 @@ admin does not want can be deleted there.
 Settings are in `application.yml` under `contentcreator.news.worker` (cron, `run-on-startup`, `max-items`) and
 `contentcreator.claude` (model, web-search limit, time-out).
 
+## NewsFileWorker (bulletin files)
+
+Watches a folder (default `~/Downloads/newssummary`, change with `CONTENTCREATOR_NEWS_DIR`) every 30 seconds for new
+`*.json` bulletin files. For each file it builds news summaries and inserts them into the same `news_summary` table as
+**unpublished drafts** (country VN, language `vi`) for an admin to review and publish. A file that was read moves to
+`processed/` inside the folder; one that cannot be read (bad JSON, larger than 2 MB) moves to `failed/`, with the reason in
+the log. A file modified in the last 5 seconds is left for the next scan, symbolic links are never followed, and a
+story whose headline and date already exist for Vietnam is skipped, so re-dropping a file creates no duplicates.
+
+File format (as in `ban-tin-2026-10-20.json`):
+
+```json
+{"date": "2026-10-20",
+ "sections": {
+   "domestic": [{"title": "...", "summary": "...", "source": "VnExpress", "url": "..."}],
+   "world":    [{"title": "...", "summary": "...", "source": "Al Jazeera", "url": "..."}],
+   "stocks":   {"indices": [{"name": "VN-Index", "close": 1691.97}],
+                "items": [{"title": "...", "summary": "...", "source": "CafeF"}]}
+ }}
+```
+
+- Every story in any section whose value is a list becomes one draft: headline = `title` (cut to 120), summary =
+  `summary` + " (Nguồn: <source>)" (the text is cut with "…" so the whole thing stays within 1,000 characters).
+  The `url` is not stored (the table has no column for it).
+- A section named `stocks` (an object with `items`) becomes **one** draft "Chứng khoán ngày 20/10: VN-Index 1.691,97
+  điểm", with the items' summaries joined and all their sources named.
+- The sample file gives 20 drafts: 7 domestic, 6 world, 6 science and tech, and 1 stock summary. Each is a separate
+  draft, so the admin can publish only the ones that suit elders and delete the rest.
+- `date` is the news date (today in Vietnam if missing or unreadable). The worker sets no other fields.
+- Turn it off with `CONTENTCREATOR_FILE_WORKER_ENABLED=false`.
+
 ## Run locally
 
-1. Get an API key at https://console.anthropic.com (Settings → API Keys; add billing credits; web search must be enabled
+1. (Only for the Anthropic API worker) get an API key at https://console.anthropic.com (Settings → API Keys; add billing credits; web search must be enabled
    for the organization). Never commit it.
 2. Create a MySQL user that can only read and add to that one table:
 

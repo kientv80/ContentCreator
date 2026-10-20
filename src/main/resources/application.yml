@@ -13,8 +13,17 @@ spring:
 
 contentcreator:
   news:
+    file-worker:
+      enabled: ${CONTENTCREATOR_FILE_WORKER_ENABLED:true}
+      # New *.json bulletins in this folder become unpublished drafts; done files move to processed/, bad ones to failed/.
+      directory: ${CONTENTCREATOR_NEWS_DIR:${user.home}/Downloads/newssummary}
+      poll-seconds: 30
+      # A file must be this old (not modified for this long) before it is read, so half-written files are skipped.
+      settle-seconds: 5
+      max-bytes: 2000000
     worker:
-      enabled: true
+      # The Anthropic API collector; needs ANTHROPIC_API_KEY. Off by default.
+      enabled: ${CONTENTCREATOR_API_WORKER_ENABLED:false}
       # Spring cron (6 fields), Vietnam time: 06:00, 12:00 and 18:00 every day.
       cron: "0 0 6,12,18 * * *"
       zone: Asia/Ho_Chi_Minh

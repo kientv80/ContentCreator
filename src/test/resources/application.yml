@@ -8,6 +8,12 @@ spring:
       mode: always
 contentcreator:
   news:
+    file-worker:
+      enabled: false
+      directory: /nonexistent
+      poll-seconds: 3600
+      settle-seconds: 0
+      max-bytes: 100000
     worker:
       enabled: false
       cron: "0 0 0 1 1 *"

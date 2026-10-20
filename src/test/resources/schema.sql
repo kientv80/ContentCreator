@@ -1,4 +1,4 @@
-CREATE TABLE news_summary (
+CREATE TABLE IF NOT EXISTS news_summary (
     id           CHAR(36) PRIMARY KEY,
     headline     VARCHAR(120) NOT NULL,
     summary      VARCHAR(1000) NOT NULL,
