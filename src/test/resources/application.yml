@@ -6,19 +6,7 @@ spring:
   flyway:
     enabled: true
 contentcreator:
+  ingest:
+    api-key: test-secret
   news:
-    worker:
-      enabled: false
-      cron: "0 0 0 1 1 *"
-      zone: Asia/Ho_Chi_Minh
-      run-on-startup: false
-      max-items: 10
-      retention-days: 30
-  claude:
-    api-key: test-key
-    base-url: http://localhost:1
-    model: test-model
-    max-tokens: 100
-    web-search-max-uses: 1
-    web-search-tool-type: web_search_20250305
-    timeout-seconds: 5
+    retention-days: 30

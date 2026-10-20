@@ -72,7 +72,8 @@ public final class NewsJsonParser {
     }
   }
 
-  private static Instant date(String s) {
+  /** Parses an ISO instant or a plain date (taken as 00:00 UTC); {@code null} when absent or unreadable. */
+  public static Instant date(String s) {
     if (s == null) {
       return null;
     }

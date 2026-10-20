@@ -16,25 +16,13 @@ spring:
     enabled: true
 
 contentcreator:
+  ingest:
+    # Shared secret the Claude coworker sends in the X-API-Key header. Never commit it:
+    # set CONTENTCREATOR_INGEST_KEY (use a long random value). Empty = publishing is refused.
+    api-key: ${CONTENTCREATOR_INGEST_KEY:}
   news:
-    worker:
-      enabled: true
-      # Spring cron (6 fields), Vietnam time: every 3 hours from 06:00 to 21:00.
-      cron: "0 0 6-21/3 * * *"
-      zone: Asia/Ho_Chi_Minh
-      run-on-startup: false
-      max-items: 10
-      # Summaries older than this are removed after each run.
-      retention-days: 30
-  claude:
-    # Never commit the key: set ANTHROPIC_API_KEY in the environment.
-    api-key: ${ANTHROPIC_API_KEY:}
-    base-url: https://api.anthropic.com
-    model: claude-sonnet-5-5
-    max-tokens: 8000
-    web-search-max-uses: 8
-    web-search-tool-type: web_search_20250305
-    timeout-seconds: 180
+    # Stories collected more than this many days ago are removed every night.
+    retention-days: 30
 
 management:
   endpoints:
