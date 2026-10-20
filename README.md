@@ -27,5 +27,4 @@ Model and web-search settings are under `contentcreator.claude` in `application.
 ## Not done yet
 
 - ElderEase wiring is done on the backend side: set `CONTENTCREATOR_URL` there (see ElderEase `DEPLOYMENT_NOTES.md`); the app's existing News Summary page shows the stories for VN users, no app change.
-  through the ElderEase backend instead of directly).
 - The endpoint has no authentication; put it behind the ElderEase backend or add auth before exposing it.
