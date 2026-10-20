@@ -3,37 +3,45 @@ package com.contentcreator.news;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
-/** Body of {@code POST /api/v1/news-summaries}: the stories the coworker publishes. */
+/** Body of {@code POST /api/v1/news-summaries}. The limits are those of the news_summary table and the admin form. */
 public record NewsPublishRequest(@NotEmpty @Size(max = 50) List<@Valid Item> items) {
 
-  /**
-   * One story.
-   *
-   * @param title the headline
-   * @param summary the summary text (Vietnamese)
-   * @param category optional, e.g. health, society, weather
-   * @param source optional outlet name
-   * @param url the article link (http or https); stories with a link already stored are skipped
-   * @param published optional ISO date or date-time
-   */
-  public record Item(
-      @NotBlank @Size(max = 300) String title,
-      @NotBlank @Size(max = 5000) String summary,
-      @Size(max = 60) String category,
-      @Size(max = 120) String source,
-      @NotBlank @Size(max = 1000) @Pattern(regexp = "(?i)^https?://.+") String url,
-      @Size(max = 40) String published) {
+  static final ZoneId VIETNAM = ZoneId.of("Asia/Ho_Chi_Minh");
 
-    NewsItem toNewsItem() {
-      return new NewsItem(title.trim(), summary.trim(), blankToNull(category), blankToNull(source), url.trim(), NewsJsonParser.date(published));
+  /**
+   * One summary.
+   *
+   * @param headline the Vietnamese headline, at most 120 characters
+   * @param summary the Vietnamese summary, at most 1,000 characters (put the outlet at the end, e.g. "(Nguồn: VnExpress)")
+   * @param newsDate optional ISO date or date-time; the Vietnam day it belongs to; today when absent
+   */
+  public record Item(@NotBlank @Size(max = 120) String headline, @NotBlank @Size(max = 1000) String summary, @Size(max = 40) String newsDate) {
+
+    NewsDraft toDraft(LocalDate today) {
+      return new NewsDraft(headline.trim(), summary.trim(), day(today));
     }
 
-    private static String blankToNull(String s) {
-      return s == null || s.isBlank() ? null : s.trim();
+    private LocalDate day(LocalDate today) {
+      if (newsDate == null || newsDate.isBlank()) {
+        return today;
+      }
+      try {
+        return Instant.parse(newsDate.trim()).atZone(VIETNAM).toLocalDate();
+      } catch (DateTimeParseException ignored) {
+        // maybe a plain date
+      }
+      try {
+        return LocalDate.parse(newsDate.trim());
+      } catch (DateTimeParseException e) {
+        return today;
+      }
     }
   }
 }

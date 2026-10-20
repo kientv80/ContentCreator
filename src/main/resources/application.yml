@@ -5,24 +5,17 @@ spring:
   application:
     name: contentcreator
   datasource:
-    url: ${CONTENTCREATOR_DB_URL:jdbc:mysql://localhost:3307/contentcreator?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${CONTENTCREATOR_DB_USER:root}
+    # ElderEase's own database: ContentCreator inserts unpublished rows into its existing news_summary table.
+    # Use a MySQL user that has only SELECT and INSERT on news_summary (see README).
+    url: ${CONTENTCREATOR_DB_URL:jdbc:mysql://localhost:3307/elderfriend?useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${CONTENTCREATOR_DB_USER:contentcreator}
     password: ${CONTENTCREATOR_DB_PASSWORD:}
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
 
 contentcreator:
   ingest:
     # Shared secret the Claude coworker sends in the X-API-Key header. Never commit it:
-    # set CONTENTCREATOR_INGEST_KEY (use a long random value). Empty = publishing is refused.
+    # set CONTENTCREATOR_INGEST_KEY (a long random value). Empty = every publish is refused.
     api-key: ${CONTENTCREATOR_INGEST_KEY:}
-  news:
-    # Stories collected more than this many days ago are removed every night.
-    retention-days: 30
 
 management:
   endpoints:

@@ -3,10 +3,9 @@ spring:
     url: jdbc:h2:mem:cc;MODE=MySQL;DB_CLOSE_DELAY=-1
     username: sa
     password: ""
-  flyway:
-    enabled: true
+  sql:
+    init:
+      mode: always
 contentcreator:
   ingest:
     api-key: test-secret
-  news:
-    retention-days: 30
