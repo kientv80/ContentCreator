@@ -1,0 +1,65 @@
+package com.contentcreator.news;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+/**
+ * Collects and summarises Vietnamese news with Claude on a schedule and stores it in the news_summary table.
+ * One run at a time; a failed run is logged and the next schedule tries again.
+ */
+@Component
+public class NewsSummaryWorker {
+
+  private static final Logger log = LoggerFactory.getLogger(NewsSummaryWorker.class);
+
+  private final NewsCollector collector;
+  private final NewsSummaryService service;
+  private final NewsWorkerProperties props;
+  private final AtomicBoolean running = new AtomicBoolean();
+
+  public NewsSummaryWorker(NewsCollector collector, NewsSummaryService service, NewsWorkerProperties props) {
+    this.collector = collector;
+    this.service = service;
+    this.props = props;
+  }
+
+  @Scheduled(cron = "${contentcreator.news.worker.cron}", zone = "${contentcreator.news.worker.zone}")
+  public void scheduledRun() {
+    if (props.enabled()) {
+      runOnce();
+    }
+  }
+
+  @EventListener(ApplicationReadyEvent.class)
+  void runAtStartup() {
+    if (props.enabled() && props.runOnStartup()) {
+      runOnce();
+    }
+  }
+
+  /** Runs one collection. Returns the number of new stories stored, or -1 when it was skipped or failed. */
+  public int runOnce() {
+    if (!running.compareAndSet(false, true)) {
+      log.info("news_summary_run skipped: previous run still going");
+      return -1;
+    }
+    try {
+      List<NewsItem> items = collector.collect(props.maxItems());
+      int stored = service.store(items);
+      int purged = service.purgeOlderThan(props.retentionDays());
+      log.info("news_summary_run collected={} stored={} purged={}", items.size(), stored, purged);
+      return stored;
+    } catch (Exception e) {
+      log.error("news_summary_run failed: {}", e.toString());
+      return -1;
+    } finally {
+      running.set(false);
+    }
+  }
+}
