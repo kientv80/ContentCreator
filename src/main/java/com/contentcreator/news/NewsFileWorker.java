@@ -35,12 +35,14 @@ public class NewsFileWorker {
 
   private final NewsFileProperties props;
   private final NewsDraftRepository repository;
+  private final CategoryRepository categories;
   private final Clock clock;
   private final AtomicBoolean running = new AtomicBoolean();
 
-  public NewsFileWorker(NewsFileProperties props, NewsDraftRepository repository, Clock clock) {
+  public NewsFileWorker(NewsFileProperties props, NewsDraftRepository repository, CategoryRepository categories, Clock clock) {
     this.props = props;
     this.repository = repository;
+    this.categories = categories;
     this.clock = clock;
   }
 
@@ -90,7 +92,7 @@ public class NewsFileWorker {
       return 0; // still being written, or just arrived: look again next time
     }
     try {
-      List<NewsDraft> drafts = NewsFileParser.parse(readBounded(file), LocalDate.now(clock.withZone(VIETNAM)));
+      List<NewsDraft> drafts = NewsFileParser.parse(readBounded(file), LocalDate.now(clock.withZone(VIETNAM)), categories::findActive);
       int stored = 0;
       for (NewsDraft draft : drafts) {
         if (!repository.exists(draft)) {

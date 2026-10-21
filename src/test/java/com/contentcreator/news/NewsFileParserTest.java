@@ -6,12 +6,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 class NewsFileParserTest {
 
   private static final LocalDate TODAY = LocalDate.of(2026, 1, 1);
+
+  /** The five categories seeded by ElderEase V42. */
+  private static final Function<String, Optional<NewsCategory>> PRESETS = code -> Optional.ofNullable(Map.of(
+      "DOMESTIC", new NewsCategory("DOMESTIC", "🏠", "Trong nước"),
+      "WORLD", new NewsCategory("WORLD", "🌍", "Thế giới"),
+      "STOCKS", new NewsCategory("STOCKS", "📈", "Chứng khoán"),
+      "SCIENCE_TECH", new NewsCategory("SCIENCE_TECH", "🔬", "Khoa học & công nghệ"),
+      "OTHER", new NewsCategory("OTHER", "📰", "Khác")).get(code));
 
   private static String sample() throws IOException {
     try (var in = NewsFileParserTest.class.getResourceAsStream("/bulletin/sample.json")) {
@@ -21,7 +33,7 @@ class NewsFileParserTest {
 
   @Test
   void theSampleBulletinBecomesOneDraftPerSection() throws IOException {
-    List<NewsDraft> drafts = NewsFileParser.parse(sample(), TODAY);
+    List<NewsDraft> drafts = NewsFileParser.parse(sample(), TODAY, PRESETS);
 
     assertThat(drafts).extracting(NewsDraft::headline).containsExactly(
         "🏠 Tin trong nước", "🌍 Tin thế giới", "📈 Tin chứng khoán (phiên gần nhất 20/10)", "🔬 Tin khoa học & công nghệ");
@@ -40,25 +52,40 @@ class NewsFileParserTest {
 
   @Test
   void theSampleSectionsGetTheirCategories() throws IOException {
-    assertThat(NewsFileParser.parse(sample(), TODAY)).extracting(NewsDraft::category)
+    assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS)).extracting(NewsDraft::category)
         .containsExactly("DOMESTIC", "WORLD", "STOCKS", "SCIENCE_TECH");
   }
 
   @Test
-  void sectionNamesMapToCategoriesIgnoringCase_andUnknownNamesAreOther() {
-    assertThat(NewsFileParser.category("domestic")).isEqualTo("DOMESTIC");
-    assertThat(NewsFileParser.category("World")).isEqualTo("WORLD");
-    assertThat(NewsFileParser.category("STOCKS")).isEqualTo("STOCKS");
-    assertThat(NewsFileParser.category("Science_Tech")).isEqualTo("SCIENCE_TECH");
-    assertThat(NewsFileParser.category("sports")).isEqualTo("OTHER");
-    assertThat(NewsFileParser.category("")).isEqualTo("OTHER");
+  void sectionNamesBecomeUpperCaseCodesWithUnderscores() {
+    assertThat(NewsFileParser.code("domestic")).isEqualTo("DOMESTIC");
+    assertThat(NewsFileParser.code("Science_Tech")).isEqualTo("SCIENCE_TECH");
+    assertThat(NewsFileParser.code("health news-2")).isEqualTo("HEALTH_NEWS_2");
+    assertThat(NewsFileParser.code("x'; DROP--")).isEqualTo("X___DROP__");
+    assertThat(NewsFileParser.code("")).isEmpty();
   }
 
   @Test
   void aMixedCaseOrUnknownSectionInAFileGetsTheMatchingCategory() {
     String json = "{\"sections\":{\"World\":[{\"summary\":\"a\"}],\"sports\":[{\"summary\":\"b\"}]}}";
 
-    assertThat(NewsFileParser.parse(json, TODAY)).extracting(NewsDraft::category).containsExactly("WORLD", "OTHER");
+    assertThat(NewsFileParser.parse(json, TODAY, PRESETS)).extracting(NewsDraft::category).containsExactly("WORLD", "OTHER");
+  }
+
+  @Test
+  void aSectionWithACategoryAndNoPresetIsHeadedWithItsEmojiAndLowerCasedName_oneLookupPerSection() {
+    List<String> asked = new ArrayList<>();
+    Function<String, Optional<NewsCategory>> lookup = code -> {
+      asked.add(code);
+      return "HEALTH".equals(code) ? Optional.of(new NewsCategory("HEALTH", "🩺", "Sức Khỏe")) : Optional.empty();
+    };
+    String json = "{\"sections\":{\"Health\":[{\"summary\":\"a\"},{\"summary\":\"b\"},{\"summary\":\"c\"}],\"sports\":[{\"summary\":\"d\"}]}}";
+
+    List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY, lookup);
+
+    assertThat(drafts).extracting(NewsDraft::headline).containsExactly("🩺 Tin sức khỏe", "📰 Tin sports");
+    assertThat(drafts).extracting(NewsDraft::category).containsExactly("HEALTH", "OTHER");
+    assertThat(asked).containsExactly("HEALTH", "SPORTS");
   }
 
   @Test
@@ -69,7 +96,7 @@ class NewsFileParserTest {
         + "{\"title\":\"Link (có ngoặc)\",\"summary\":\"s\",\"source\":\"Y\",\"url\":\"https://a.vn/x_(1)\"},"
         + "{\"title\":\"Không nguồn\",\"summary\":\"s\"}]}}";
 
-    String[] paragraphs = NewsFileParser.parse(json, TODAY).get(0).summary().split("\n\n");
+    String[] paragraphs = NewsFileParser.parse(json, TODAY, PRESETS).get(0).summary().split("\n\n");
 
     assertThat(paragraphs).containsExactly(
         "**A b (c)**: Có đậm và (nhãn)(x) (Nguồn: VnExpress)",
@@ -83,7 +110,7 @@ class NewsFileParserTest {
     String story = "{\"title\":\"t\",\"summary\":\"" + "s".repeat(2500) + "\"}";
     String json = "{\"date\":\"2026-10-20\",\"sections\":{\"" + "n".repeat(200) + "\":[" + String.join(",", story, story, story, story) + "]}}";
 
-    NewsDraft d = NewsFileParser.parse(json, TODAY).get(0);
+    NewsDraft d = NewsFileParser.parse(json, TODAY, PRESETS).get(0);
 
     assertThat(d.summary().split("\n\n")).hasSize(3);
     assertThat(d.summary().length()).isLessThanOrEqualTo(8000);
@@ -95,18 +122,18 @@ class NewsFileParserTest {
     String json = "{\"date\":\"soon\",\"sections\":{\"health_news\":[{\"title\":\"t\",\"summary\":\"s\"}],"
         + "\"empty\":[],\"junk\":[{\"title\":\"x\"}],\"text\":\"abc\",\"stocks\":{\"items\":[{\"summary\":\"Đi ngang.\"}]}}}";
 
-    List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY);
+    List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY, PRESETS);
 
     assertThat(drafts).extracting(NewsDraft::headline).containsExactly("📰 Tin health news", "📈 Tin chứng khoán (phiên gần nhất 01/01)");
     assertThat(drafts).extracting(NewsDraft::newsDate).containsOnly(TODAY);
-    assertThat(NewsFileParser.parse("{}", TODAY)).isEmpty();
+    assertThat(NewsFileParser.parse("{}", TODAY, PRESETS)).isEmpty();
   }
 
   @Test
   void theStocksHeadingUsesItsSessionDate() {
     String json = "{\"date\":\"2026-10-21\",\"sections\":{\"stocks\":{\"session_date\":\"2026-10-20\",\"items\":[{\"summary\":\"x\"}]}}}";
 
-    NewsDraft d = NewsFileParser.parse(json, TODAY).get(0);
+    NewsDraft d = NewsFileParser.parse(json, TODAY, PRESETS).get(0);
 
     assertThat(d.headline()).isEqualTo("📈 Tin chứng khoán (phiên gần nhất 20/10)");
     assertThat(d.newsDate()).isEqualTo(LocalDate.of(2026, 10, 21));
@@ -114,14 +141,14 @@ class NewsFileParserTest {
 
   @Test
   void rejectsFilesThatAreNotAJsonObject() {
-    assertThatThrownBy(() -> NewsFileParser.parse("not json", TODAY)).isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> NewsFileParser.parse("[1,2]", TODAY)).isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> NewsFileParser.parse("", TODAY)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> NewsFileParser.parse("not json", TODAY, PRESETS)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> NewsFileParser.parse("[1,2]", TODAY, PRESETS)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> NewsFileParser.parse("", TODAY, PRESETS)).isInstanceOf(IllegalArgumentException.class);
   }
 
   private static String one(String source, String url) {
     String json = "{\"sections\":{\"domestic\":[{\"title\":\"T\",\"summary\":\"s\",\"source\":\"" + source + "\",\"url\":\"" + url + "\"}]}}";
-    return NewsFileParser.parse(json, java.time.LocalDate.of(2026, 10, 20)).get(0).summary();
+    return NewsFileParser.parse(json, java.time.LocalDate.of(2026, 10, 20), PRESETS).get(0).summary();
   }
 
   @Test
@@ -140,7 +167,7 @@ class NewsFileParserTest {
   }
 
   private static String story(String fields) {
-    return NewsFileParser.parse("{\"sections\":{\"domestic\":[{" + fields + "}]}}", TODAY).get(0).summary();
+    return NewsFileParser.parse("{\"sections\":{\"domestic\":[{" + fields + "}]}}", TODAY, PRESETS).get(0).summary();
   }
 
   @Test
@@ -176,8 +203,8 @@ class NewsFileParserTest {
     String fits = "{\"summary\":\"" + "b".repeat(3998) + "\"}";
     String tooBig = "{\"summary\":\"" + "b".repeat(3998) + "\",\"published\":\"2026-10-20T15:47+07:00\"}";
     // 3990 + 2 + 3998 = 7990 fits; adding " · 15:47 20/10" (14 chars) makes 8004 > 8000
-    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + fits + "]}}", TODAY).get(0).summary()).hasSize(7990);
-    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + tooBig + "]}}", TODAY).get(0).summary()).isEqualTo(text);
+    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + fits + "]}}", TODAY, PRESETS).get(0).summary()).hasSize(7990);
+    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + tooBig + "]}}", TODAY, PRESETS).get(0).summary()).isEqualTo(text);
   }
 
   @Test
@@ -186,7 +213,7 @@ class NewsFileParserTest {
     try (var in = NewsFileParserTest.class.getResourceAsStream("/bulletin/ban-tin-2026-10-21.json")) {
       json = new String(in.readAllBytes(), StandardCharsets.UTF_8);
     }
-    List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY);
+    List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY, PRESETS);
     assertThat(drafts).isNotEmpty().allSatisfy(d -> assertThat(d.summary().length()).isBetween(1, 8000));
     String all = String.join("\n\n", drafts.stream().map(NewsDraft::summary).toList());
     assertThat(all).contains(" · 15:47 20/10").contains(" · 00:05 21/10").contains(" · 22:20 20/10").contains(" · 06:11 21/10");

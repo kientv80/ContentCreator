@@ -13,3 +13,18 @@ CREATE TABLE IF NOT EXISTS news_summary (
     created_at   DATETIME(6) NOT NULL,
     updated_at   DATETIME(6) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS news_category (
+    code       VARCHAR(20) PRIMARY KEY,
+    emoji      VARCHAR(16) NOT NULL,
+    name_en    VARCHAR(60) NOT NULL,
+    name_vi    VARCHAR(60) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    active     BOOLEAN NOT NULL DEFAULT TRUE
+);
+MERGE INTO news_category (code, emoji, name_en, name_vi, sort_order, active) KEY (code) VALUES
+    ('DOMESTIC', '🏠', 'Domestic', 'Trong nước', 1, TRUE),
+    ('WORLD', '🌍', 'World', 'Thế giới', 2, TRUE),
+    ('STOCKS', '📈', 'Stocks', 'Chứng khoán', 3, TRUE),
+    ('SCIENCE_TECH', '🔬', 'Science & tech', 'Khoa học & công nghệ', 4, TRUE),
+    ('OTHER', '📰', 'Other', 'Khác', 5, TRUE);

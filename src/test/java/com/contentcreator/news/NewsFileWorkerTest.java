@@ -23,10 +23,11 @@ class NewsFileWorkerTest {
   @BeforeEach
   void reset() {
     jdbc.update("DELETE FROM news_summary");
+    jdbc.update("DELETE FROM news_category WHERE code IN ('HEALTH', 'OFF')");
   }
 
   private NewsFileWorker worker(boolean enabled, long settleSeconds, long maxBytes) {
-    return new NewsFileWorker(new NewsFileProperties(enabled, dir.toString(), 30, settleSeconds, maxBytes), new NewsDraftRepository(jdbc), Clock.systemUTC());
+    return new NewsFileWorker(new NewsFileProperties(enabled, dir.toString(), 30, settleSeconds, maxBytes), new NewsDraftRepository(jdbc), new CategoryRepository(jdbc), Clock.systemUTC());
   }
 
   private int count() {
@@ -108,7 +109,7 @@ class NewsFileWorkerTest {
   @Test
   void aMissingFolderAndTheDisabledScheduleDoNothing() throws IOException {
     Files.writeString(dir.resolve("a.json"), bulletin("A"));
-    NewsFileWorker missing = new NewsFileWorker(new NewsFileProperties(true, dir.resolve("nope").toString(), 30, 0, 100), new NewsDraftRepository(jdbc), Clock.systemUTC());
+    NewsFileWorker missing = new NewsFileWorker(new NewsFileProperties(true, dir.resolve("nope").toString(), 30, 0, 100), new NewsDraftRepository(jdbc), new CategoryRepository(jdbc), Clock.systemUTC());
 
     assertThat(missing.scanOnce()).isZero();
     disabledWorker.scheduledScan();
@@ -191,5 +192,43 @@ class NewsFileWorkerTest {
     assertThat(NewsFileWorker.linkCount(f)).isEqualTo(1);
     Files.createLink(dir.resolve("q.txt"), f);
     assertThat(NewsFileWorker.linkCount(f)).isEqualTo(2);
+  }
+
+  private String sectionsBulletin() {
+    return "{\"date\":\"2026-10-20\",\"sections\":{\"health\":[{\"summary\":\"a\"}],\"off\":[{\"summary\":\"b\"}],"
+        + "\"world\":[{\"summary\":\"c\"}],\"mystery\":[{\"summary\":\"d\"}]}}";
+  }
+
+  private java.util.Map<String, String> categoriesByHeadline() {
+    var map = new java.util.HashMap<String, String>();
+    jdbc.query("SELECT headline, category FROM news_summary", rs -> { map.put(rs.getString(1), rs.getString(2)); });
+    return map;
+  }
+
+  @Test
+  void aNewActiveCategoryHeadsItsDraft_whileInactiveAndUnknownSectionsFallBackToOther() throws IOException {
+    jdbc.update("INSERT INTO news_category (code, emoji, name_en, name_vi, sort_order, active) VALUES ('HEALTH', '🩺', 'Health', 'Sức khỏe', 6, TRUE)");
+    jdbc.update("INSERT INTO news_category (code, emoji, name_en, name_vi, sort_order, active) VALUES ('OFF', '🚫', 'Off', 'Tắt', 7, FALSE)");
+    Files.writeString(dir.resolve("a.json"), sectionsBulletin());
+
+    assertThat(worker(true, 0, 100000).scanOnce()).isEqualTo(4);
+
+    assertThat(categoriesByHeadline()).containsEntry("🩺 Tin sức khỏe", "HEALTH").containsEntry("🌍 Tin thế giới", "WORLD")
+        .containsEntry("📰 Tin off", "OTHER").containsEntry("📰 Tin mystery", "OTHER").hasSize(4);
+  }
+
+  @Test
+  void whenTheCategoryLookupFailsEveryDraftIsOtherAndTheRunContinues() throws IOException {
+    JdbcTemplate failing = org.mockito.Mockito.spy(jdbc);
+    org.mockito.Mockito.doThrow(new org.springframework.jdbc.BadSqlGrammarException("q", "SELECT", new java.sql.SQLException("denied")))
+        .when(failing).query(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(org.springframework.jdbc.core.RowMapper.class), org.mockito.ArgumentMatchers.any(Object[].class));
+    NewsFileWorker w = new NewsFileWorker(new NewsFileProperties(true, dir.toString(), 30, 0, 100000), new NewsDraftRepository(jdbc), new CategoryRepository(failing), Clock.systemUTC());
+    Files.writeString(dir.resolve("a.json"), sectionsBulletin());
+
+    assertThat(w.scanOnce()).isEqualTo(4);
+
+    assertThat(categoriesByHeadline()).containsEntry("🌍 Tin thế giới", "OTHER").containsEntry("📰 Tin health", "OTHER").hasSize(4);
+    assertThat(dir.resolve("failed")).doesNotExist();
+    assertThat(dir.resolve("a.json")).doesNotExist();
   }
 }

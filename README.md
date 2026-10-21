@@ -69,10 +69,15 @@ File format (as in `ban-tin-2026-10-20.json`):
   text. The time counts toward the 8,000 characters.
 - `date` is the news date (today in Vietnam if missing or unreadable); for `stocks`, `session_date` is shown in the
   heading. The worker sets no other fields. The same headline and date is never inserted twice.
-- The **category** column (`DOMESTIC`, `WORLD`, `STOCKS`, `SCIENCE_TECH`, `OTHER`; ElderEase migration **V40**) is set from the
-  section name, matched case-insensitively (`domestic`, `world`, `stocks`, `science_tech`); any other section is `OTHER`.
-  Drafts from the Anthropic API worker are always `OTHER`. **Apply ElderEase V40 before running this version**: the
-  INSERT writes `news_summary.category` and fails without the column. The duplicate check is unchanged.
+- The **category** is server-driven (ElderEase migration **V42**, table `news_category`; `news_summary.category` is a
+  foreign key to it). The section name is turned into a code (upper-cased, every character other than A-Z and 0-9 becomes
+  `_`, e.g. `science_tech` -> `SCIENCE_TECH`) and looked up with `SELECT ... FROM news_category WHERE code = ? AND active = TRUE`
+  (once per section, nothing cached, so a category an admin adds is used on the next scan). If it is found, that is the
+  draft's category; otherwise (unknown, inactive, or the lookup fails) the draft is filed as `OTHER` and the admin can
+  create the category later and move the draft. Headings: `domestic`, `world`, `stocks`, `science_tech` keep their fixed
+  headings; any other section whose category exists is headed `<emoji> Tin <name_vi in lower case>` (e.g. `🩺 Tin sức khỏe`);
+  an unknown section is headed `📰 Tin <name>`. Drafts from the Anthropic API worker are always `OTHER`.
+  **Apply ElderEase V40 and V42 before running this version.** The duplicate check is unchanged.
 - Turn it off with `CONTENTCREATOR_FILE_WORKER_ENABLED=false`.
 
 ## Run locally
@@ -84,9 +89,10 @@ File format (as in `ban-tin-2026-10-20.json`):
 ```sql
 CREATE USER 'contentcreator'@'%' IDENTIFIED BY '<password>';
 GRANT SELECT, INSERT ON elderfriend.news_summary TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.news_category TO 'contentcreator'@'%';
 ```
 
-The grant stays `SELECT, INSERT` (V40 adds a column, no new privilege is needed).
+The second grant (read-only) is needed for the category lookup (V42); without it every draft is filed as `OTHER`.
 
 3. Start it:
 

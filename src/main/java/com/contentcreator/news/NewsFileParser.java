@@ -6,7 +6,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Builds drafts from a daily news bulletin file (see README for the format): one draft per section. A section is
@@ -14,6 +17,7 @@ import java.util.Map;
  * {@code items} list of the same. The draft's headline is the section's heading, e.g. "📈 Tin chứng khoán (phiên
  * gần nhất 20/10)"; its summary holds one paragraph per story in the simple markup the app renders:
  * {@code **Title**: text [Source](https://link) · HH:mm dd/MM} (paragraphs separated by a blank line).
+ * The draft's category comes from a lookup passed in (the news_category table), so this class stays free of the database.
  */
 public final class NewsFileParser {
 
@@ -32,10 +36,11 @@ public final class NewsFileParser {
   /**
    * @param json the file's text
    * @param today the day to use when the file has no valid {@code date}
+   * @param categories finds an active category by code; called once per section, empty means OTHER
    * @return one draft per non-empty section, in file order
    * @throws IllegalArgumentException when the text is not a JSON object
    */
-  public static List<NewsDraft> parse(String json, LocalDate today) {
+  public static List<NewsDraft> parse(String json, LocalDate today, Function<String, Optional<NewsCategory>> categories) {
     JsonNode root;
     try {
       root = MAPPER.readTree(json);
@@ -55,30 +60,31 @@ public final class NewsFileParser {
       if (summary != null) {
         String sessionDay = section.path("session_date").asText("");
         LocalDate shown = "stocks".equals(name) ? day(sessionDay, day) : day;
-        drafts.add(new NewsDraft(cut(heading(name, shown), MAX_HEADLINE), summary, day, category(name)));
+        Optional<NewsCategory> category = categories.apply(code(name));
+        String code = category.map(NewsCategory::code).orElse(NewsDraft.OTHER);
+        drafts.add(new NewsDraft(cut(heading(name, shown, category.orElse(null)), MAX_HEADLINE), summary, day, code));
       }
     });
     return drafts;
   }
 
   /**
-   * Maps a bulletin section name to a news_summary category code (case-insensitive).
+   * The news_category code for a bulletin section name: upper-cased, every character that is not a letter or digit
+   * (A-Z, 0-9) replaced by an underscore.
    *
    * @param name the section name, e.g. {@code science_tech}
-   * @return DOMESTIC, WORLD, STOCKS or SCIENCE_TECH; OTHER for any other name
+   * @return e.g. {@code SCIENCE_TECH}
    */
-  static String category(String name) {
-    return switch (name.toLowerCase(java.util.Locale.ROOT)) {
-      case "domestic" -> "DOMESTIC";
-      case "world" -> "WORLD";
-      case "stocks" -> "STOCKS";
-      case "science_tech" -> "SCIENCE_TECH";
-      default -> NewsDraft.OTHER;
-    };
+  static String code(String name) {
+    return name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "_");
   }
 
-  private static String heading(String name, LocalDate shown) {
-    String base = HEADINGS.getOrDefault(name, "📰 Tin " + name.replace('_', ' '));
+  /** The preset heading for the four known sections; else the category's emoji and name; else a generic one. */
+  private static String heading(String name, LocalDate shown, NewsCategory category) {
+    String generic = category == null
+        ? "📰 Tin " + name.replace('_', ' ')
+        : category.emoji() + " Tin " + category.nameVi().toLowerCase(Locale.ROOT);
+    String base = HEADINGS.getOrDefault(name, generic);
     return "stocks".equals(name) ? base + String.format(" (phiên gần nhất %02d/%02d)", shown.getDayOfMonth(), shown.getMonthValue()) : base;
   }
 
