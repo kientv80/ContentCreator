@@ -18,8 +18,8 @@ import java.util.Map;
 public final class NewsFileParser {
 
   static final int MAX_HEADLINE = 120;
-  /** The news_summary.summary column limit (migration V38). */
-  static final int MAX_SUMMARY = 5000;
+  /** The news_summary.summary column limit (ElderEase migration V41). */
+  static final int MAX_SUMMARY = 8000;
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Map<String, String> HEADINGS = Map.of(
       "domestic", "🏠 Tin trong nước",

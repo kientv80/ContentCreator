@@ -26,7 +26,7 @@ class NewsFileParserTest {
     assertThat(drafts).extracting(NewsDraft::headline).containsExactly(
         "🏠 Tin trong nước", "🌍 Tin thế giới", "📈 Tin chứng khoán (phiên gần nhất 20/10)", "🔬 Tin khoa học & công nghệ");
     assertThat(drafts).allSatisfy(d -> {
-      assertThat(d.summary().length()).isBetween(1, 5000);
+      assertThat(d.summary().length()).isBetween(1, 8000);
       assertThat(d.newsDate()).isEqualTo(LocalDate.of(2026, 10, 20));
     });
     NewsDraft domestic = drafts.get(0);
@@ -80,13 +80,13 @@ class NewsFileParserTest {
 
   @Test
   void storiesThatDoNotFitTheColumnAreLeftOutWholeAndTheHeadlineIsCut() {
-    String story = "{\"title\":\"t\",\"summary\":\"" + "s".repeat(1500) + "\"}";
+    String story = "{\"title\":\"t\",\"summary\":\"" + "s".repeat(2500) + "\"}";
     String json = "{\"date\":\"2026-10-20\",\"sections\":{\"" + "n".repeat(200) + "\":[" + String.join(",", story, story, story, story) + "]}}";
 
     NewsDraft d = NewsFileParser.parse(json, TODAY).get(0);
 
     assertThat(d.summary().split("\n\n")).hasSize(3);
-    assertThat(d.summary().length()).isLessThanOrEqualTo(5000);
+    assertThat(d.summary().length()).isLessThanOrEqualTo(8000);
     assertThat(d.headline()).hasSize(120).startsWith("📰 Tin nnnn");
   }
 
@@ -171,12 +171,12 @@ class NewsFileParserTest {
 
   @Test
   void theTimeCountsTowardTheBudget_soAStoryThatNoLongerFitsIsLeftOutWhole() {
-    String text = "a".repeat(2490);
+    String text = "a".repeat(3990);
     String s1 = "{\"summary\":\"" + text + "\"}";
-    String fits = "{\"summary\":\"" + "b".repeat(2498) + "\"}";
-    String tooBig = "{\"summary\":\"" + "b".repeat(2498) + "\",\"published\":\"2026-10-20T15:47+07:00\"}";
-    // 2490 + 2 + 2498 = 4990 fits; adding " · 15:47 20/10" (14 chars) makes 5004 > 5000
-    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + fits + "]}}", TODAY).get(0).summary()).hasSize(4990);
+    String fits = "{\"summary\":\"" + "b".repeat(3998) + "\"}";
+    String tooBig = "{\"summary\":\"" + "b".repeat(3998) + "\",\"published\":\"2026-10-20T15:47+07:00\"}";
+    // 3990 + 2 + 3998 = 7990 fits; adding " · 15:47 20/10" (14 chars) makes 8004 > 8000
+    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + fits + "]}}", TODAY).get(0).summary()).hasSize(7990);
     assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + tooBig + "]}}", TODAY).get(0).summary()).isEqualTo(text);
   }
 
@@ -187,7 +187,7 @@ class NewsFileParserTest {
       json = new String(in.readAllBytes(), StandardCharsets.UTF_8);
     }
     List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY);
-    assertThat(drafts).isNotEmpty().allSatisfy(d -> assertThat(d.summary().length()).isBetween(1, 5000));
+    assertThat(drafts).isNotEmpty().allSatisfy(d -> assertThat(d.summary().length()).isBetween(1, 8000));
     String all = String.join("\n\n", drafts.stream().map(NewsDraft::summary).toList());
     assertThat(all).contains(" · 15:47 20/10").contains(" · 00:05 21/10").contains(" · 22:20 20/10").contains(" · 06:11 21/10");
   }
