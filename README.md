@@ -60,6 +60,13 @@ File format (as in `ban-tin-2026-10-20.json`):
   A `)` in a URL is written as `%29`.
 - The summary column holds 5,000 characters (ElderEase migration V38). Stories that would not fit are left out whole,
   never cut in the middle.
+- **Byline time** (FR-321): each story may have a `published` value; its line then ends with
+  `[Source](https://link) · HH:mm dd/MM` (or `(Nguồn: Source) · HH:mm dd/MM`), in Vietnam time (Asia/Ho_Chi_Minh), e.g.
+  `[Dân Việt](https://…) · 15:47 20/10`. The leading `yyyy-MM-dd[Thh:mm[:ss]][Z|+hh:mm|+hhmm]` is read (a space may
+  replace the `T`) and anything after it is ignored; a time with an offset is converted to Vietnam time, one without
+  is taken as Vietnam time. A date only, or a midnight `00:00` placeholder, shows just `dd/MM`. A missing, blank,
+  non-text or unreadable value (e.g. month 13, hour 25) adds nothing. A story with no source gets ` · time` after its
+  text. The time counts toward the 5,000 characters.
 - `date` is the news date (today in Vietnam if missing or unreadable); for `stocks`, `session_date` is shown in the
   heading. The worker sets no other fields. The same headline and date is never inserted twice.
 - The **category** column (`DOMESTIC`, `WORLD`, `STOCKS`, `SCIENCE_TECH`, `OTHER`; ElderEase migration **V40**) is set from the

@@ -13,7 +13,7 @@ import java.util.Map;
  * a list of stories {@code {title, summary, source, url}}, or (like {@code stocks}) an object with an
  * {@code items} list of the same. The draft's headline is the section's heading, e.g. "📈 Tin chứng khoán (phiên
  * gần nhất 20/10)"; its summary holds one paragraph per story in the simple markup the app renders:
- * {@code **Title**: text [Source](https://link)} (paragraphs separated by a blank line).
+ * {@code **Title**: text [Source](https://link) · HH:mm dd/MM} (paragraphs separated by a blank line).
  */
 public final class NewsFileParser {
 
@@ -103,7 +103,7 @@ public final class NewsFileParser {
     return out.isEmpty() ? null : out.toString();
   }
 
-  /** {@code **Title**: text [Source](url)}; the title and the link are left out when missing. */
+  /** {@code **Title**: text [Source](url) · HH:mm dd/MM}; the title, link and time are left out when missing. */
   private static String paragraph(JsonNode story) {
     String text = NewsText.clean(text(story, "summary"));
     if (text == null) {
@@ -112,6 +112,7 @@ public final class NewsFileParser {
     String title = NewsText.clean(text(story, "title"));
     String source = NewsText.clean(text(story, "source"));
     String url = text(story, "url");
+    String time = story.path("published").isTextual() ? PublishedTime.format(story.get("published").asText()) : "";
     StringBuilder p = new StringBuilder();
     if (title != null) p.append("**").append(title).append("**: ");
     p.append(text);
@@ -124,6 +125,7 @@ public final class NewsFileParser {
         p.append("(Nguồn: ").append(source).append(')');
       }
     }
+    if (!time.isEmpty()) p.append(" · ").append(time);
     return p.toString();
   }
 

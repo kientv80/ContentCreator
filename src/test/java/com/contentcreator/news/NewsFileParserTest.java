@@ -138,4 +138,57 @@ class NewsFileParserTest {
     assertThat(one("vnexpress.net", "https://evil.example/a")).isEqualTo("**T**: s (Nguồn: vnexpress.net)");
     assertThat(one("VnExpress", "https://evil.example/a")).isEqualTo("**T**: s [VnExpress](https://evil.example/a)");
   }
+
+  private static String story(String fields) {
+    return NewsFileParser.parse("{\"sections\":{\"domestic\":[{" + fields + "}]}}", TODAY).get(0).summary();
+  }
+
+  @Test
+  void aPublishedTimeEndsTheByline_afterTheLinkOrTheNguonFallback() {
+    String base = "\"title\":\"T\",\"summary\":\"s\",\"source\":\"VnExpress\",";
+    assertThat(story(base + "\"url\":\"https://vnexpress.net/a\",\"published\":\"2026-10-20T08:47:30Z\""))
+        .isEqualTo("**T**: s [VnExpress](https://vnexpress.net/a) · 15:47 20/10");
+    assertThat(story(base + "\"url\":\"javascript:x\",\"published\":\"2026-10-21\""))
+        .isEqualTo("**T**: s (Nguồn: VnExpress) · 21/10");
+  }
+
+  @Test
+  void aStoryWithoutSourceGetsTheTimeAfterTheText_onlyWhenThereIsOne() {
+    assertThat(story("\"summary\":\"s\",\"published\":\"2026-10-20T15:47+07:00\"")).isEqualTo("s · 15:47 20/10");
+    assertThat(story("\"summary\":\"s\",\"published\":\"soon\"")).isEqualTo("s");
+  }
+
+  @Test
+  void aMissingNullOrNonTextPublishedAddsNothing() {
+    String base = "\"summary\":\"s\",\"source\":\"VnExpress\",\"url\":\"https://vnexpress.net/a\"";
+    String plain = "s [VnExpress](https://vnexpress.net/a)";
+    assertThat(story(base)).isEqualTo(plain);
+    assertThat(story(base + ",\"published\":null")).isEqualTo(plain);
+    assertThat(story(base + ",\"published\":20261020")).isEqualTo(plain);
+    assertThat(story(base + ",\"published\":{\"a\":1}")).isEqualTo(plain);
+    assertThat(story(base + ",\"published\":\"2026-10-20T25:00\"")).isEqualTo(plain);
+  }
+
+  @Test
+  void theTimeCountsTowardTheBudget_soAStoryThatNoLongerFitsIsLeftOutWhole() {
+    String text = "a".repeat(2490);
+    String s1 = "{\"summary\":\"" + text + "\"}";
+    String fits = "{\"summary\":\"" + "b".repeat(2498) + "\"}";
+    String tooBig = "{\"summary\":\"" + "b".repeat(2498) + "\",\"published\":\"2026-10-20T15:47+07:00\"}";
+    // 2490 + 2 + 2498 = 4990 fits; adding " · 15:47 20/10" (14 chars) makes 5004 > 5000
+    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + fits + "]}}", TODAY).get(0).summary()).hasSize(4990);
+    assertThat(NewsFileParser.parse("{\"sections\":{\"d\":[" + s1 + "," + tooBig + "]}}", TODAY).get(0).summary()).isEqualTo(text);
+  }
+
+  @Test
+  void theNewestRealBulletinKeepsItsStoriesAndAddsTimes() throws IOException {
+    String json;
+    try (var in = NewsFileParserTest.class.getResourceAsStream("/bulletin/ban-tin-2026-10-21.json")) {
+      json = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+    }
+    List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY);
+    assertThat(drafts).isNotEmpty().allSatisfy(d -> assertThat(d.summary().length()).isBetween(1, 5000));
+    String all = String.join("\n\n", drafts.stream().map(NewsDraft::summary).toList());
+    assertThat(all).contains(" · 15:47 20/10").contains(" · 00:05 21/10").contains(" · 22:20 20/10").contains(" · 06:11 21/10");
+  }
 }

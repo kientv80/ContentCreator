@@ -1,0 +1,430 @@
+{
+  "date": "2026-10-21",
+  "title": "Bản tin ngày 21/10/2026",
+  "timezone": "Asia/Saigon",
+  "highlights": [
+    "Việt Nam – Đan Mạch nâng quan hệ lên Đối tác Chiến lược Toàn diện; cầu đi bộ qua sông Sài Gòn hợp long sáng 21/10.",
+    "Trump gây sức ép buộc Ukraine chấp nhận thỏa thuận hòa bình; Iran tuyên bố không đàm phán với Mỹ khi chưa được đáp ứng điều kiện; drone tấn công chợ ở Abyei khiến ít nhất 153 người chết.",
+    "VN-Index nhích lên 1.691,97 điểm, khối ngoại bán ròng ~275 tỷ đồng; Techcombank báo lãi trước thuế quý III kỷ lục hơn 10.400 tỷ đồng."
+  ],
+  "sections": {
+    "domestic": [
+      {
+        "title": "Việt Nam – Đan Mạch nâng cấp quan hệ lên Đối tác Chiến lược Toàn diện",
+        "summary": "Ngày 20/10/2026 tại Copenhagen, Tổng Bí thư, Chủ tịch nước Tô Lâm và Thủ tướng Đan Mạch Mette Frederiksen hội đàm và thông qua Tuyên bố chung nâng cấp quan hệ lên Đối tác Chiến lược Toàn diện; Đan Mạch là nước EU thứ hai, sau Pháp, có khuôn khổ quan hệ này với Việt Nam. Hai bên xác định thương mại, đầu tư là trụ cột, cam kết thực thi hiệu quả EVFTA, mở rộng tiếp cận thị trường; Đan Mạch ủng hộ doanh nghiệp đầu tư dài hạn vào công nghệ cao, dự án xanh. Hợp tác chuyển đổi năng lượng, ứng phó biến đổi khí hậu được đẩy mạnh; Việt Nam đề nghị hỗ trợ tài chính xanh, điện gió ngoài khơi và JETP, đồng thời hoan nghênh doanh nghiệp Đan Mạch tham gia cảng biển, logistics, vận tải biển xanh. Hai bên cũng mở rộng hợp tác khoa học-công nghệ, y tế, kinh tế tuần hoàn, giáo dục, du lịch; nhiều văn kiện hợp tác về y tế, khoa học-công nghệ, hàng không, năng lượng đã được trao.",
+        "key_points": [
+          "Hội đàm tại Copenhagen ngày 20/10/2026, thông qua Tuyên bố chung",
+          "Đan Mạch là nước EU thứ hai (sau Pháp) là Đối tác Chiến lược Toàn diện của Việt Nam",
+          "Trọng tâm: thương mại-đầu tư, EVFTA, năng lượng tái tạo, điện gió ngoài khơi, JETP, cảng biển, logistics",
+          "Hơn 18.000 người Việt sinh sống tại Đan Mạch",
+          "Trao văn kiện hợp tác về y tế, khoa học-công nghệ, hàng không, năng lượng"
+        ],
+        "source": "VnExpress (theo TTXVN)",
+        "url": "https://vnexpress.net/viet-nam-dan-mach-nang-cap-quan-he-len-doi-tac-chien-luoc-toan-dien-5134836.html",
+        "event_time": "2026-10-20",
+        "event_time_text": "ngày 20/10 (hội đàm tại Copenhagen)",
+        "published": "2026-10-21T00:05:00+07:00"
+      },
+      {
+        "title": "Chính thức hợp long cầu đi bộ ngàn tỷ qua sông Sài Gòn",
+        "summary": "Diễn biến mới: đúng 8h sáng 21/10/2026, nhịp chính của cầu đi bộ qua sông Sài Gòn đã hợp long, sau khi các đơn vị bắt đầu thao tác sà lan từ khoảng 4h30 và tận dụng khoảng 3 giờ 'nước đứng' theo con nước. Cầu dài khoảng 720 m, nối công viên Bến Bạch Đằng (trung tâm TP.HCM) với công viên bờ sông Thủ Thiêm; nhịp chính là vòm thép dài 187 m, nặng khoảng 3.400 tấn, do Tập đoàn Đại Dũng chế tạo, lắp đặt; Nutifood tài trợ toàn bộ chi phí. Công đoạn tiếp theo là hàn các điểm nối để cố định kết cấu, rồi hoàn thiện mặt cầu, chiếu sáng, lan can và cảnh quan hai bờ. Công trình dự kiến cơ bản hoàn thành vào cuối năm 2026.",
+        "key_points": [
+          "Hợp long lúc 8h ngày 21/10/2026; thao tác từ khoảng 4h30",
+          "Cầu dài khoảng 720 m; nhịp vòm thép 187 m, nặng khoảng 3.400 tấn",
+          "Nutifood tài trợ toàn bộ, kinh phí khoảng 'ngàn tỷ đồng'",
+          "Dự kiến cơ bản hoàn thành cuối năm 2026"
+        ],
+        "source": "Tuổi Trẻ",
+        "url": "https://tuoitre.vn/da-chinh-thuc-hop-long-cau-di-bo-qua-song-sai-gon-100261021080914748.htm",
+        "event_time": "2026-10-21T08:00+07:00",
+        "event_time_text": "đúng 8h ngày 21-10-2026",
+        "published": "2026-10-21T08:13:00+07:00"
+      },
+      {
+        "title": "Thủ tướng chỉ thị siết phòng, chống gian lận thi cử",
+        "summary": "Ngày 20/10/2026, Thủ tướng ban hành chỉ thị tăng cường phòng, chống gian lận thi cử và nâng cao chất lượng kiểm tra, đánh giá trong giáo dục, đào tạo. Chỉ thị nhận định có nơi kết quả thi chưa phản ánh đúng chất lượng dạy-học, gian lận và vi phạm liêm chính học thuật vẫn xảy ra, nguyên nhân gồm yếu tố con người, bệnh thành tích và bất cập trong cơ chế đánh giá, thi đua, khen thưởng. Bộ GD&ĐT phải rà soát tổng thể quy chế thi, tăng ứng dụng công nghệ; các địa phương, nhà trường thiết lập kiểm tra chéo, ghi nhật ký, giám sát độc lập ở khâu rủi ro cao; xử lý nghiêm thi hộ, đạo văn, sửa điểm, lộ đề, gian lận công nghệ cao 'không có vùng cấm, không có ngoại lệ'. Không được lấy tỷ lệ học sinh khá, giỏi, tỷ lệ tốt nghiệp hay kết quả thi làm căn cứ duy nhất để đánh giá, xếp hạng, khen thưởng; bối cảnh là vụ gian lận tại trường THPT chuyên ở Tuyên Quang khiến 328 thí sinh phải thi lại tốt nghiệp THPT 2026.",
+        "key_points": [
+          "Chỉ thị ban hành ngày 20/10/2026",
+          "Xử lý vi phạm 'không có vùng cấm, không có ngoại lệ'",
+          "Không lấy tỷ lệ khá, giỏi, tỷ lệ tốt nghiệp để xét khen thưởng",
+          "Kiểm tra chéo, ghi nhật ký, giám sát độc lập ở khâu rủi ro cao",
+          "Vụ gian lận ở Tuyên Quang: 328 thí sinh phải thi lại tốt nghiệp THPT 2026"
+        ],
+        "source": "VnExpress",
+        "url": "https://vnexpress.net/thu-tuong-khong-lay-ty-le-kha-gioi-de-xet-khen-thuong-5134754.html",
+        "event_time": "2026-10-20",
+        "event_time_text": "ngày 20/10",
+        "published": "2026-10-20T17:58:00+07:00"
+      },
+      {
+        "title": "Bộ Chính trị ra chỉ thị bảo đảm an ninh môi trường",
+        "summary": "Bộ Chính trị ban hành Chỉ thị số 15-CT/TW ngày 15/10/2026 về bảo đảm an ninh môi trường trong giai đoạn phát triển mới, do Thường trực Ban Bí thư Trần Cẩm Tú ký; nội dung được công bố tối 20/10. Chỉ thị nhận định ô nhiễm, suy thoái tài nguyên, biến đổi khí hậu, thiên tai cực đoan và vi phạm pháp luật môi trường ngày càng phức tạp, có thể trở thành vấn đề an ninh liên vùng, xuyên biên giới; yêu cầu kiểm soát chặt, không để sự cố môi trường thành khủng hoảng. Các cấp phải chuyển sang phòng ngừa sớm, quản trị rủi ro, đánh giá rủi ro môi trường khi xây dựng chính sách, quy hoạch, dự án; người đứng đầu chịu trách nhiệm; bên vi phạm phải phục hồi môi trường và bồi thường. Lực lượng Công an giữ vai trò nòng cốt; Đảng ủy Chính phủ xây dựng chương trình hành động, Đảng ủy Công an Trung ương theo dõi, báo cáo Bộ Chính trị.",
+        "key_points": [
+          "Chỉ thị 15-CT/TW ngày 15/10/2026, ông Trần Cẩm Tú ký",
+          "Không để sự cố môi trường thành khủng hoảng",
+          "Đánh giá rủi ro môi trường với chính sách, quy hoạch, dự án lớn",
+          "Phát triển giám sát số, bản đồ rủi ro, cảnh báo sớm",
+          "Công an là lực lượng nòng cốt; trấn áp tội phạm môi trường có tổ chức, xuyên quốc gia"
+        ],
+        "source": "Dân trí",
+        "url": "https://dantri.com.vn/thoi-su/bo-chinh-tri-kiem-soat-chat-khong-de-su-co-moi-truong-thanh-khung-hoang-20261020174611296.htm",
+        "event_time": "2026-10-15",
+        "event_time_text": "Chỉ thị ban hành ngày 15/10 (công bố ngày 20/10/2026)",
+        "published": "2026-10-20T20:49:00+07:00"
+      },
+      {
+        "title": "Quốc hội bàn 7 dự án luật về y tế, lao động, bảo hiểm xã hội",
+        "summary": "Ngày 21/10/2026, trong Kỳ họp thứ 2 Quốc hội khóa XVI, Quốc hội làm việc về 7 dự án luật liên quan trực tiếp đến dân sinh. Buổi sáng, Bộ trưởng Y tế trình 3 dự án: sửa Luật Hiến, lấy, ghép mô, bộ phận cơ thể người và hiến, lấy xác; luật sửa nhiều luật (Trẻ em, Người khuyết tật, Khám bệnh chữa bệnh, Dược, Người cao tuổi, Bảo hiểm y tế); sửa Luật Phòng, chống tác hại thuốc lá. Bộ trưởng Nội vụ trình 4 dự án: sửa Luật An toàn, vệ sinh lao động; luật sửa Bộ luật Lao động cùng các luật Lưu trữ, Bình đẳng giới, Hoạt động chữ thập đỏ, Việc làm; sửa Luật Bảo hiểm xã hội; sửa Luật Thực hiện dân chủ ở cơ sở. Sau phần nghe tờ trình, báo cáo thẩm tra, đại biểu thảo luận ở tổ về nhóm luật y tế, buổi chiều thảo luận 4 dự án còn lại.",
+        "key_points": [
+          "7 dự án luật: 3 lĩnh vực y tế, 4 do Bộ Nội vụ trình",
+          "Có sửa Luật Bảo hiểm xã hội, Luật Phòng chống tác hại thuốc lá, Bộ luật Lao động",
+          "Ủy ban Văn hóa và Xã hội thẩm tra 6 dự án; Ủy ban Dân nguyện và Giám sát thẩm tra luật dân chủ cơ sở",
+          "Sáng nghe tờ trình, thảo luận tổ luật y tế; chiều thảo luận tổ 4 dự án còn lại"
+        ],
+        "source": "Báo Nhân Dân",
+        "url": "https://nhandan.vn/hom-nay-quoc-hoi-thao-luan-tai-to-ve-7-du-an-luat-post996866.html",
+        "event_time": "2026-10-21",
+        "event_time_text": "ngày 21/10/2026 (sáng và chiều)",
+        "published": "2026-10-21T07:28:00+07:00"
+      },
+      {
+        "title": "Giá vàng SJC giảm phiên thứ tư liên tiếp, vàng nhẫn mất hơn 2 triệu",
+        "summary": "Lúc 8h sáng 21/10/2026, vàng miếng SJC niêm yết 139,6 – 142,6 triệu đồng/lượng (mua – bán), giảm 500.000 đồng so với phiên trước và là phiên giảm thứ tư liên tiếp, tổng cộng mất 1,3 triệu đồng/lượng mỗi chiều. Vàng nhẫn SJC còn 137,7 – 141,2 triệu đồng/lượng, giảm 1,6 triệu chiều mua và 1,1 triệu chiều bán; sau bốn phiên, giá mua giảm 2,1 triệu, giá bán giảm 1,6 triệu. Vàng thế giới cùng thời điểm ở 4.114,83 USD/ounce, giảm 26 USD trong 24 giờ khi giới đầu tư cân nhắc khả năng Fed tiếp tục tăng lãi suất; quy đổi khoảng 129,3 triệu đồng/lượng, thấp hơn giá bán SJC khoảng 13,3 triệu. Cuộc họp chính sách của Fed dự kiến diễn ra 27–28/10.",
+        "key_points": [
+          "SJC 8h ngày 21/10: 139,6 – 142,6 triệu đồng/lượng, giảm 500.000 đồng",
+          "Giảm 4 phiên liên tiếp, tổng 1,3 triệu đồng/lượng",
+          "Vàng nhẫn SJC 137,7 – 141,2 triệu; 4 phiên mất 2,1 triệu chiều mua",
+          "Vàng thế giới 4.114,83 USD/ounce; chênh lệch với SJC khoảng 13,3 triệu đồng/lượng",
+          "Fed họp chính sách 27–28/10"
+        ],
+        "source": "Tuổi Trẻ",
+        "url": "https://tuoitre.vn/gia-vang-hom-nay-21-10-vang-sjc-giam-4-phien-lien-tiep-vang-nhan-mat-hon-2-trieu-100261021083801411.htm",
+        "event_time": "2026-10-21T08:00+07:00",
+        "event_time_text": "8h sáng 21-10",
+        "published": "2026-10-21T09:02:00+07:00"
+      }
+    ],
+    "world": [
+      {
+        "title": "Trump gây sức ép buộc Ukraine chấp nhận thỏa thuận hòa bình",
+        "summary": "Ngày 20/10 tại Nhà Trắng, Tổng thống Mỹ Donald Trump đổ lỗi cho Tổng thống Ukraine Volodymyr Zelensky cản trở tiến trình hòa bình, cảnh báo nếu không muốn chấm dứt chiến tranh thì \"sẽ là điều rất tồi tệ\" vì Nga có nguồn nhân lực \"vô hạn\", và nói về khả năng gặp Putin–Zelensky: \"Tôi không quan tâm làm thế nào\". Cùng ngày, ông Zelensky gặp đặc phái viên Mỹ Steve Witkoff và các lãnh đạo châu Âu tại Oslo (Na Uy), cho biết Ukraine có \"một số ý tưởng rõ ràng\" về hòa bình và muốn Mỹ chuyển tới Nga, kể cả khả năng họp thượng đỉnh ba bên. Ông Witkoff dự kiến sang Nga ngày 21/10. Căng thẳng còn liên quan việc hệ thống Starshield (bản quân sự của Starlink) mà Ukraine dùng bị làm chậm: tờ WSJ nói Elon Musk ra lệnh, trong khi Trump và Bộ trưởng Quốc phòng Pete Hegseth phủ nhận chính phủ chỉ đạo. Ngoại trưởng Marco Rubio cũng bảo vệ việc Trump miễn áp dụng các biện pháp trừng phạt mới với Nga theo luật trừng phạt Nga và Iran.",
+        "key_points": [
+          "Trump: Zelensky \"phải muốn giải quyết cuộc chiến này\"",
+          "Zelensky gặp Witkoff ở Oslo ngày 20/10",
+          "Witkoff dự kiến tới Nga ngày 21/10",
+          "Tranh cãi việc Starshield bị làm chậm: WSJ quy cho Musk, Nhà Trắng phủ nhận",
+          "Trump miễn trừng phạt mới với Nga; Rubio gọi đó là \"hành động cân bằng\""
+        ],
+        "source": "Al Jazeera",
+        "url": "https://www.aljazeera.com/news/2026/10/20/i-dont-care-how-its-done-trump-pressures-ukraine-to-cut-peace-deal",
+        "event_time": "2026-10-20",
+        "event_time_text": "Thứ Ba 20/10/2026, phát biểu tại Nhà Trắng; cuộc gặp ở Oslo cùng ngày; ông Witkoff dự kiến sang Nga ngày 21/10",
+        "published": "2026-10-20T22:20:13 (Al Jazeera meta)"
+      },
+      {
+        "title": "Iran nói với Tư lệnh quân đội Pakistan: không đàm phán với Mỹ khi chưa đáp ứng yêu cầu",
+        "summary": "Ngày 20/10, Iran tuyên bố với Thống chế Asim Munir, Tư lệnh Lục quân Pakistan đang ở Tehran làm trung gian, rằng sẽ không đàm phán với Washington cho đến khi các yêu cầu của Tehran được đáp ứng. Ông Munir gặp Tổng thống Masoud Pezeshkian và Chủ tịch Quốc hội Mohammad Baqer Qalibaf; ông Qalibaf nói Mỹ không thể lấy lại lòng tin nếu chưa đáp ứng 7 điều kiện Iran đặt ra tháng trước để mở lại eo biển Hormuz, gồm chấm dứt phong tỏa cảng Iran, dỡ trừng phạt dầu mỏ và chấm dứt giao tranh trên mọi mặt trận khu vực. Người đứng đầu an ninh Mohsen Rezaei khẳng định toàn bộ vật liệu hạt nhân đã làm giàu sẽ ở lại Iran. Thỏa thuận tạm thời \"Bản ghi nhớ Islamabad\" hồi tháng 6 đã đổ vỡ khi giao tranh Mỹ–Iran tái diễn; theo các quan chức cấp cao, Tehran cố tình kéo dài đàm phán nhằm làm suy yếu ông Trump trước bầu cử giữa kỳ tháng 11 và đang chuẩn bị cho khả năng bị Mỹ, Israel tấn công trở lại.",
+        "key_points": [
+          "Munir gặp Pezeshkian, Qalibaf và Rezaei tại Tehran ngày 20/10",
+          "7 điều kiện của Iran để mở lại eo biển Hormuz",
+          "Iran không chuyển uranium đã làm giàu ra nước ngoài",
+          "\"Bản ghi nhớ Islamabad\" (tháng 6) đã đổ vỡ",
+          "Cuộc chiến Mỹ–Iran đã kéo dài 8 tháng"
+        ],
+        "source": "Reuters (qua The Algemeiner)",
+        "url": "https://www.algemeiner.com/2026/10/20/iran-tells-pakistan-army-chief-no-talks-washington-until-demands-met/",
+        "event_time": "2026-10-20",
+        "event_time_text": "Thứ Ba 20/10/2026",
+        "published": "2026-10-20 2:53 pm (Algemeiner; ảnh Reuters đánh dấu 2026-10-20T16:47:27Z)"
+      },
+      {
+        "title": "Anh điều tiêm kích Typhoon tuần tra bảo vệ Saudi Arabia trước Houthi",
+        "summary": "Ngày 20/10, Bộ trưởng Quốc phòng Anh Wes Streeting thông báo chiến đấu cơ Typhoon của Không quân Hoàng gia (RAF) sẽ thực hiện tuần tra phòng không \"phòng thủ\" trên lãnh thổ Saudi Arabia, nhằm bắn hạ tên lửa và drone do lực lượng Houthi ở Yemen phóng vào các thành phố, dân thường và hạ tầng then chốt của Saudi, nhưng không tấn công mục tiêu mặt đất. Anh cũng gửi một máy bay vận tải và cố vấn quân sự, đồng thời gia hạn thêm 90 ngày nhiệm vụ tiếp nhiên liệu trên không cho máy bay Saudi. Đây là diễn biến mới sau khi sân bay quốc tế chính của Riyadh bị tấn công nhiều lần đầu tháng 10; ông Streeting gọi các vụ tấn công là \"đáng khinh\" nhưng khẳng định không có giải pháp quân sự lâu dài. Ai Cập cũng cam kết triển khai phòng không và máy bay hỗ trợ Saudi, quốc hội Ai Cập sẽ bỏ phiếu vào tuần tới; Mỹ lần này từ chối không kích Houthi.",
+        "key_points": [
+          "RAF Typhoon tuần tra phòng không trên Saudi, không đánh mục tiêu mặt đất",
+          "Gia hạn 90 ngày nhiệm vụ tiếp dầu trên không",
+          "Sân bay chính của Riyadh bị tấn công nhiều lần trong tháng 10",
+          "Ai Cập sẽ gửi phòng không, máy bay; quốc hội bỏ phiếu tuần tới",
+          "Mỹ từ chối không kích Houthi lần này"
+        ],
+        "source": "AP (qua Springfield News-Sun)",
+        "url": "https://www.springfieldnewssun.com/nation-world/uk-expands-military-support-for-saudi-arabia-against-houthis-with-defensive-air-patrols/article_4e7b6e60-49e9-55c9-9a93-44332cab1662.html",
+        "event_time": "2026-10-20",
+        "event_time_text": "Anh công bố thứ Ba 20/10/2026",
+        "published": "2026-10-20T15:56:16Z"
+      },
+      {
+        "title": "Không kích bằng drone vào chợ ở vùng tranh chấp Abyei, ít nhất 153 người chết",
+        "summary": "Khoảng 11 giờ sáng thứ Hai 19/10, một cuộc không kích bằng drone đánh trúng chợ Amiet, phía bắc thị trấn Abyei – vùng giàu dầu mỏ tranh chấp giữa Sudan và Nam Sudan – và một kho nhiên liệu gần đó, khiến ít nhất 153 người thiệt mạng theo quan chức địa phương; đám cháy vẫn tiếp diễn sang 20/10 và số người chết dự kiến tăng. Bộ trưởng Thông tin Abyei Yohanna Akol Ngor và Bộ Ngoại giao Nam Sudan quy trách nhiệm cho quân đội Sudan; Nam Sudan đã triệu Đại sứ Sudan. Một sĩ quan cấp cao Sudan thừa nhận quân đội thực hiện vụ tấn công, nói nhắm vào xe bồn chở nhiên liệu từ Nam Sudan cho lực lượng bán quân sự RSF. Tổng thư ký LHQ lên án vụ tấn công; lực lượng gìn giữ hòa bình UNISFA đang xác minh thương vong, còn MSF cho biết đã tiếp nhận hơn 20 người bị thương, nhiều ca nguy kịch.",
+        "key_points": [
+          "Ít nhất 153 người chết tại chợ Amiet, Abyei",
+          "Xảy ra khoảng 11h sáng thứ Hai 19/10 (giờ địa phương)",
+          "Quân đội Sudan thừa nhận, nói nhắm vào nhiên liệu tiếp tế cho RSF",
+          "Nam Sudan triệu Đại sứ Sudan; LHQ lên án",
+          "Nội chiến Sudan kéo dài từ tháng 4/2023"
+        ],
+        "source": "AP (qua WSOC-TV)",
+        "url": "https://www.wsoctv.com/news/world/drone-strike-market/DDEECDDNX46UNCYLVOFT25SIKU/",
+        "event_time": "2026-10-19T16:00+07:00",
+        "event_time_text": "Khoảng 11h sáng thứ Hai 19/10/2026 (giờ địa phương, UTC+2); đám cháy vẫn tiếp diễn ngày 20/10",
+        "published": "2026-10-20T15:31Z (meta); cập nhật 2026-10-21 12:59 a.m. EDT"
+      },
+      {
+        "title": "Quốc hội miền đông Libya phê chuẩn thỏa thuận hàng hải với Thổ Nhĩ Kỳ, Hy Lạp phản đối",
+        "summary": "Ngày 20/10, chính quyền ở Benghazi do Tướng Khalifa Haftar hậu thuẫn thông báo Hạ viện có trụ sở tại Tobruk đã nhất trí phê chuẩn bản ghi nhớ năm 2019 giữa Thổ Nhĩ Kỳ và Chính phủ Hòa hợp Dân tộc (GNA) cũ ở Tripoli về phân định ranh giới biển ở Địa Trung Hải. Quyết định đảo ngược lần bác bỏ năm 2020, khi chính quốc hội này cắt quan hệ chính trị với Ankara, và phản ánh sự xích lại giữa Thổ Nhĩ Kỳ với lực lượng LNA của ông Haftar (tháng 7 hai bên đã thỏa thuận phát triển cơ sở quân sự, hệ thống giám sát). Bộ Ngoại giao Hy Lạp tuyên bố bản ghi nhớ vi phạm luật biển quốc tế, xâm phạm quyền chủ quyền các nước trong khu vực và sẽ áp dụng mọi biện pháp thích hợp để bảo vệ quyền của mình.",
+        "key_points": [
+          "Hạ viện Tobruk bỏ phiếu nhất trí",
+          "Đảo ngược quyết định bác bỏ năm 2020",
+          "Tháng 7: Thổ Nhĩ Kỳ – LNA thỏa thuận phát triển cơ sở quân sự",
+          "Hy Lạp: vi phạm luật biển quốc tế"
+        ],
+        "source": "Al Jazeera",
+        "url": "https://www.aljazeera.com/news/2026/10/20/eastern-libya-parliament-approves-maritime-deal-with-turkey-lifts-2020-boy",
+        "event_time": "2026-10-20",
+        "event_time_text": "Thông báo thứ Ba 20/10/2026",
+        "published": "2026-10-20 15:19 (Al Jazeera meta; cập nhật 16:34)"
+      },
+      {
+        "title": "Nigeria xác nhận ca Ebola đầu tiên, dịch lan rộng ở châu Phi",
+        "summary": "Ngày 20/10, Nigeria xác nhận ca nhiễm Ebola đầu tiên tại thủ đô Abuja: một phụ nữ đến từ Uganda, khởi phát triệu chứng ngày 7/10 và nhập viện tư ngày 11/10; Bộ trưởng Y tế Muhammad Pate cho biết đang truy vết 44 người tiếp xúc. Cùng ngày, Kenya xác nhận ca thứ 9, đều thuộc một ổ dịch liên quan bệnh nhân đầu tiên (đi từ CHDC Congo qua Uganda, tử vong tại Nairobi ngày 5/10); 134/135 người tiếp xúc đã được truy vết và cách ly. CHDC Congo đã ghi nhận hơn 9.000 ca và hơn 4.000 ca tử vong từ tháng 5, được ECDC coi là dịch Ebola lớn thứ hai từng ghi nhận; việc kiểm soát khó khăn vì chưa có vaccine hay thuốc đặc trị được cấp phép cho chủng Bundibugyo.",
+        "key_points": [
+          "Ca đầu tiên ở Nigeria: phụ nữ từ Uganda, truy vết 44 người",
+          "Kenya: 9 ca, cùng một ổ dịch",
+          "CHDC Congo: hơn 9.000 ca, hơn 4.000 tử vong từ tháng 5",
+          "Chủng Bundibugyo chưa có vaccine được cấp phép"
+        ],
+        "source": "Al Jazeera",
+        "url": "https://www.aljazeera.com/news/2026/10/20/kenya-confirms-ninth-ebola-case",
+        "event_time": "2026-10-20",
+        "event_time_text": "Nigeria xác nhận ca bệnh ngày 20/10 (triệu chứng từ 7/10, nhập viện 11/10); Kenya xác nhận ca thứ 9 ngày 20/10",
+        "published": "2026-10-20 17:31:26 (Al Jazeera meta; cập nhật 20:03:16)"
+      }
+    ],
+    "stocks": {
+      "session_date": "2026-10-20",
+      "indices": [
+        {
+          "name": "VN-Index",
+          "close": 1691.97,
+          "change": 2.13,
+          "change_pct": 0.13
+        },
+        {
+          "name": "HNX-Index",
+          "close": 257.96,
+          "change": 0.05,
+          "change_pct": 0.02
+        },
+        {
+          "name": "UPCoM-Index",
+          "close": 125.33,
+          "change": 0.31,
+          "change_pct": null
+        }
+      ],
+      "liquidity_bn_vnd": 12993,
+      "foreign_net_bn_vnd": {
+        "total": -275,
+        "hose": -220,
+        "hnx": -31,
+        "upcom": -24
+      },
+      "items": [
+        {
+          "title": "VN-Index đảo chiều tăng nhẹ lên 1.691,97 điểm, chưa chinh phục được mốc 1.700",
+          "summary": "Phiên 20/10, VN-Index có lúc lùi về 1.677,19 điểm rồi hồi lên 1.695,48 điểm, đóng cửa tại 1.691,97 điểm, tăng 2,13 điểm (+0,13%); HNX-Index tăng 0,05 điểm lên 257,96 điểm, UPCoM-Index tăng 0,31 điểm lên 125,33 điểm. Trên HoSE, độ rộng cải thiện từ 108 mã tăng/173 mã giảm buổi sáng lên 188 mã tăng/115 mã giảm khi đóng cửa; VN30 tăng 0,34% với 14 mã tăng, 10 mã giảm. Tổng giá trị giao dịch toàn thị trường hơn 12.993 tỷ đồng (khoảng 565 triệu cổ phiếu), giảm so với 13.354 tỷ đồng phiên trước. VIC góp khoảng 3,3 điểm, TCB (+2,11%) và HPG (+2,68%) cùng hỗ trợ, trong khi VHM giảm 4,15% và lấy đi hơn 4 điểm; VCB, HDB, LPB cùng kéo giảm khoảng 1,5 điểm. Nhóm vật liệu cơ bản tăng mạnh nhất (+1,63%); PNJ, MDG, TNH, SZC, DPG tăng trần.",
+          "key_points": [
+            "VN-Index 1.691,97 điểm (+2,13 điểm; +0,13%); biên độ trong phiên khoảng 18,3 điểm",
+            "HNX-Index 257,96 (+0,05 điểm; +0,02% theo Vietstock); UPCoM-Index 125,33 (+0,31 điểm)",
+            "Độ rộng HoSE lúc đóng cửa: 188 mã tăng / 115 mã giảm; VN30 +0,34%, VNMID +0,66%, VNSML +0,39%",
+            "Thanh khoản hơn 12.993 tỷ đồng, giảm so với 13.354 tỷ đồng phiên trước",
+            "Tác động tích cực: VIC (~+3,3 điểm), TCB, HPG; tiêu cực: VHM (-4,15%, kéo giảm hơn 4 điểm), VCB, HDB, LPB",
+            "Vật liệu cơ bản +1,63%, công nghiệp +0,69% (CTD +4,43%); tài chính -0,12%, bất động sản -0,09%"
+          ],
+          "source": "Dân Việt; Báo Đầu tư; Vietstock (qua Investing.com)",
+          "url": "https://danviet.vn/vn-index-dao-chieu-tang-nhe-nhung-chua-the-chinh-phuc-moc-1700-d1468623.html",
+          "event_time": "2026-10-20T15:00+07:00",
+          "event_time_text": "Phiên giao dịch chiều 20/10/2026 (đóng cửa)",
+          "published": "2026-10-20T15:47:30+07:00"
+        },
+        {
+          "title": "Khối ngoại bán ròng khoảng 275 tỷ đồng nhưng gom hơn 345 tỷ đồng cổ phiếu TCB",
+          "summary": "Phiên 20/10, khối ngoại bán ròng khoảng 275 tỷ đồng toàn thị trường, gồm 220 tỷ đồng trên HoSE, 31 tỷ đồng trên HNX và 24 tỷ đồng trên UPCoM. Trên HoSE, TCB được mua ròng mạnh nhất với hơn 345 tỷ đồng, tiếp theo là HPG (145 tỷ đồng) và FRT (78 tỷ đồng); chiều bán ròng mạnh nhất gồm ACB (137 tỷ đồng), VHM (136 tỷ đồng) và KDC (100 tỷ đồng). Trên HNX, IDC (12 tỷ đồng) và PVS (11 tỷ đồng) được mua ròng, trong khi SHS (26 tỷ đồng) và CEO (17 tỷ đồng) bị bán ròng. Trên UPCoM, VEA bị bán ròng 25 tỷ đồng.",
+          "key_points": [
+            "Tổng bán ròng ~275 tỷ đồng: HoSE -220, HNX -31, UPCoM -24 tỷ đồng",
+            "Mua ròng HoSE: TCB (>345 tỷ), HPG (145 tỷ), FRT (78 tỷ)",
+            "Bán ròng HoSE: ACB (137 tỷ), VHM (136 tỷ), KDC (100 tỷ)",
+            "HNX: mua IDC (12 tỷ), PVS (11 tỷ); bán SHS (26 tỷ), CEO (17 tỷ)",
+            "UPCoM: bán ròng VEA (25 tỷ), mua ròng TIN (1 tỷ)"
+          ],
+          "source": "CafeF",
+          "url": "https://cafef.vn/khoi-ngoai-rot-gan-350-ty-gom-mot-co-phieu-ngan-hang-phien-20-10-188261020153015436.chn",
+          "event_time": "2026-10-20",
+          "event_time_text": "Phiên giao dịch 20/10/2026",
+          "published": "2026-10-20T15:45+07:00"
+        },
+        {
+          "title": "Techcombank lãi trước thuế quý III kỷ lục 10.400 tỷ đồng, chốt quyền chia cổ tức cổ phiếu 50%",
+          "summary": "Techcombank (TCB) báo lợi nhuận trước thuế quý III/2026 đạt 10.400 tỷ đồng, tăng 25,8% so với cùng kỳ và là mức cao nhất theo quý từ trước đến nay; lũy kế 9 tháng đạt 28.900 tỷ đồng, tăng 23,7%. Tổng thu nhập hoạt động 9 tháng đạt 45.200 tỷ đồng (+17,1%), trong đó thu nhập phí thuần tăng 40% lên 11.800 tỷ đồng; NIM quý III đạt 3,5%. Tỷ lệ nợ xấu quý III tăng lên 1,36% từ 1,15% của quý II, CASA đạt 245.900 tỷ đồng (35,5% tiền gửi). Trước đó, ngân hàng chốt ngày đăng ký cuối cùng 30/10/2026 (GDKHQ dự kiến 29/10) để phát hành hơn 3,54 tỷ cổ phiếu trả cổ tức tỷ lệ 50%, nâng vốn điều lệ từ 70.862 tỷ lên khoảng 106.293,6 tỷ đồng.",
+          "key_points": [
+            "LNTT quý III/2026: 10.400 tỷ đồng (+25,8%), cao nhất theo quý từ trước đến nay",
+            "LNTT 9 tháng: 28.900 tỷ đồng (+23,7%); TOI 45.200 tỷ đồng (+17,1%); ROE 12 tháng 16,3%",
+            "Nợ xấu quý III 1,36% (quý II: 1,15%); tỷ lệ bao phủ nợ xấu 107%",
+            "Cổ tức cổ phiếu 50%: ĐKCC 30/10/2026, GDKHQ dự kiến 29/10; vốn điều lệ lên ~106.293,6 tỷ đồng"
+          ],
+          "source": "Tin nhanh Chứng khoán (Đầu tư Chứng khoán); CafeF",
+          "url": "https://www.tinnhanhchungkhoan.vn/techcombank-tcb-loi-nhuan-quy-iii2026-dat-hon-10400-ty-dong-post399882.html",
+          "event_time": "2026-10-20",
+          "event_time_text": "Kết quả kinh doanh công bố tối 20/10/2026; thông báo chốt quyền cổ tức đăng 11:26 ngày 20/10/2026",
+          "published": "2026-10-21T07:07+07:00"
+        },
+        {
+          "title": "Cập nhật lợi nhuận ngân hàng tối 20/10: SHB, ABBank, Nam A Bank, Vietbank, PGBank công bố",
+          "summary": "Tính đến tối 20/10, thêm nhiều ngân hàng công bố kết quả 9 tháng năm 2026. SHB ước lợi nhuận trước thuế 9 tháng đạt 14.300 tỷ đồng, tăng 17% và hoàn thành 81% kế hoạch năm. ABBank lãi trước thuế 4.301 tỷ đồng, gần gấp đôi cùng kỳ và đạt gần 96% kế hoạch cả năm; Nam A Bank lãi hơn 4.700 tỷ đồng, tăng 25%, đạt gần 80% kế hoạch. Vietbank (riêng lẻ, tạm tính) lãi 1.297 tỷ đồng, tăng 50% so với 865 tỷ đồng cùng kỳ; PGBank lãi 630 tỷ đồng, tăng 27%.",
+          "key_points": [
+            "SHB: LNTT 9 tháng ước 14.300 tỷ đồng (+17%), đạt 81% kế hoạch năm (số sơ bộ)",
+            "ABBank: LNTT 9 tháng 4.301 tỷ đồng, gần gấp đôi cùng kỳ, đạt gần 96% kế hoạch",
+            "Nam A Bank: LNTT 9 tháng hơn 4.700 tỷ đồng (+25%), gần 80% kế hoạch",
+            "Vietbank: 1.297 tỷ đồng (+50%); PGBank: 630 tỷ đồng (+27%)"
+          ],
+          "source": "CafeF",
+          "url": "https://cafef.vn/cap-nhat-loi-nhuan-ngan-hang-toi-20-10-them-nha-bang-lai-hon-10000-ty-trong-quy-3-mot-ngan-hang-cao-gap-doi-cung-ky-188261020202307258.chn",
+          "event_time": "2026-10-20",
+          "event_time_text": "Số liệu cập nhật đến tối 20/10/2026",
+          "published": "2026-10-20T20:21+07:00"
+        },
+        {
+          "title": "BCTC quý III tối 20/10: Xi măng Hà Tiên tăng 14%, ABW gấp 6,5 lần, VIX giảm 94%",
+          "summary": "Theo cập nhật báo cáo tài chính quý III/2026 tối 20/10, Xi măng Vicem Hà Tiên (HT1) lãi trước thuế 120 tỷ đồng, tăng 14%, lũy kế 9 tháng 391 tỷ đồng (+67%). Chứng khoán An Bình (ABW) lãi trước thuế quý III 376 tỷ đồng, tăng 552% (khoảng 6,5 lần), 9 tháng đạt 602 tỷ đồng (+361%); TDM lãi 51 tỷ đồng, gấp khoảng 18,2 lần. Ngược lại, Chứng khoán VIX lãi trước thuế quý III chỉ 192 tỷ đồng, giảm 94%, lũy kế 9 tháng 424 tỷ đồng (-92%); BMS lỗ 64 tỷ đồng trong khi cùng kỳ lãi 45 tỷ đồng. KIS lãi 248 tỷ đồng (+2%).",
+          "key_points": [
+            "HT1: LNTT quý III 120 tỷ đồng (+14%); 9 tháng 391 tỷ đồng (+67%)",
+            "ABW: LNTT quý III 376 tỷ đồng (+552%); 9 tháng 602 tỷ đồng (+361%)",
+            "VIX: LNTT quý III 192 tỷ đồng (-94%); 9 tháng 424 tỷ đồng (-92%)",
+            "BMS lỗ 64 tỷ đồng quý III; DSC lãi 4 tỷ đồng (-98%); TDM 51 tỷ đồng (gấp ~18,2 lần)"
+          ],
+          "source": "CafeBiz",
+          "url": "https://cafebiz.vn/cap-nhat-bctc-quy-3-2026-toi-ngay-20-10-loat-doanh-nghiep-lon-cong-bo-techcombank-lai-hon-10000-ty-nhieu-dn-tang-bang-lan-176261020185351743.chn",
+          "event_time": "2026-10-20",
+          "event_time_text": "Các doanh nghiệp công bố BCTC quý III/2026 trong ngày/tối 20/10/2026",
+          "published": "2026-10-20T19:53+07:00"
+        },
+        {
+          "title": "Masan High-Tech Materials (MSR) tạm ứng cổ tức tiền mặt 20%, chi khoảng 2.210 tỷ đồng",
+          "summary": "Masan High-Tech Materials (MSR, UPCoM) chốt ngày đăng ký cuối cùng 2/11/2026 để tạm ứng cổ tức bằng tiền tỷ lệ 20% (2.000 đồng/cổ phiếu), dự kiến thanh toán ngày 6/11/2026. Với hơn 1,1 tỷ cổ phiếu lưu hành, công ty cần chi khoảng 2.210 tỷ đồng. Trước đó MSR đã trả đợt 10% (khoảng 1.105 tỷ đồng) ngày 24/9; tổng tỷ lệ cổ tức năm 2026 được cổ đông thông qua là 60%, tương đương khoảng 6.600 tỷ đồng. Nửa đầu năm 2026, doanh thu thuần đạt khoảng 11.131 tỷ đồng (gấp 3,7 lần cùng kỳ), lợi nhuận sau thuế hơn 2.202 tỷ đồng, vượt 129,5% kế hoạch lợi nhuận tối thiểu.",
+          "key_points": [
+            "Tỷ lệ 20% tiền mặt (2.000 đồng/cp), tổng chi khoảng 2.210 tỷ đồng",
+            "ĐKCC 2/11/2026; thanh toán dự kiến 6/11/2026",
+            "Tổng cổ tức năm 2026: 60%, khoảng 6.600 tỷ đồng",
+            "6 tháng 2026: doanh thu ~11.131 tỷ đồng (gấp 3,7 lần), LNST >2.202 tỷ đồng"
+          ],
+          "source": "CafeF",
+          "url": "https://cafef.vn/masan-high-tech-materials-sap-chi-gan-2210-ty-dong-tam-ung-co-tuc-188261020163910348.chn",
+          "event_time": "2026-11-02",
+          "event_time_text": "Ngày đăng ký cuối cùng 2/11/2026; thanh toán 6/11/2026",
+          "published": "2026-10-20T17:29+07:00"
+        },
+        {
+          "title": "Phố Wall phân hóa: Dow Jones tăng hơn 529 điểm, Nasdaq giảm nhẹ; châu Á đỏ lửa, Kospi mất 3,7%",
+          "summary": "Phiên 20/10 (giờ Mỹ), Dow Jones tăng 529,85 điểm (+1,02%) lên 52.495,88 điểm, S&P 500 tăng 21,84 điểm (+0,28%) lên 7.712,57 điểm, còn Nasdaq Composite giảm 6,07 điểm (-0,02%) xuống 26.424,82 điểm. Dòng tiền rời nhóm công nghệ để chuyển sang y tế, công nghiệp, bất động sản và cổ phiếu vốn hóa nhỏ nhờ loạt kết quả kinh doanh khả quan (3M nâng dự báo lợi nhuận) và giá dầu Brent đảo chiều đóng cửa dưới 109 USD/thùng. Trước đó tại châu Á, Kospi giảm 3,7% xuống 5.552,74 điểm, Nikkei 225 và Hang Seng cùng giảm 1,3% (lần lượt 64.075,52 và 23.867,74 điểm), Shanghai Composite tăng 0,1% lên 3.735,37 điểm, do lo ngại về hiệu quả đầu tư AI khiến cổ phiếu chip bị bán tháo và giá dầu vượt 110 USD/thùng.",
+          "key_points": [
+            "Dow Jones 52.495,88 (+529,85 điểm; +1,02%)",
+            "S&P 500 7.712,57 (+21,84 điểm; +0,28%); Nasdaq 26.424,82 (-6,07 điểm; -0,02%)",
+            "Nguyên nhân: kết quả kinh doanh tích cực, giá dầu hạ nhiệt cuối phiên, dòng tiền rời nhóm công nghệ",
+            "Châu Á: Kospi -3,7% (5.552,74), Nikkei -1,3% (64.075,52), Hang Seng -1,3% (23.867,74), Shanghai +0,1% (3.735,37)"
+          ],
+          "source": "Index.vn; TradingKey; Báo Tin tức (TTXVN)",
+          "url": "https://index.vn/tin-tuc/dow-jones-tang-hon-529-diem-nasdaq-giam-nhe-co-phieu-cong-nghe-chiu-ap-luc-ban",
+          "event_time": "2026-10-20",
+          "event_time_text": "Phiên 20/10/2026 giờ Mỹ (kết thúc rạng sáng 21/10 giờ VN); châu Á phiên 20/10/2026 (bài Báo Tin tức đăng 2026-10-20T16:33:31+07:00)",
+          "published": "2026-10-21T01:33:57Z"
+        }
+      ]
+    },
+    "science_tech": [
+      {
+        "title": "Phó Thủ tướng đốc thúc 17 nhiệm vụ công nghệ chiến lược, tổng kinh phí hơn 2.319 tỷ đồng",
+        "summary": "Sáng 20/10/2026 tại Trụ sở Chính phủ (Hà Nội), Phó Thủ tướng Hồ Quốc Dũng chủ trì cuộc họp về tiến độ triển khai các nhiệm vụ phát triển công nghệ chiến lược. Theo báo cáo của Bộ KH&CN, trong 29 đề xuất đợt đầu theo Quyết định 808/QĐ-TTg, 23 nhiệm vụ đủ điều kiện và đến ngày 19/10 đã có 17 nhiệm vụ được phê duyệt với tổng kinh phí đề xuất hơn 2.319 tỷ đồng, trong đó khoảng 1.518 tỷ đồng (65,5%) từ ngân sách nhà nước và khoảng 800,7 tỷ đồng (34,5%) từ nguồn ngoài ngân sách. Các nhiệm vụ tập trung vào vệ tinh quan sát Trái Đất, chip thu phát vô tuyến cho UAV, vật liệu và hệ thống điều khiển đường sắt, mạng 5G chuyên dụng, liệu pháp tế bào, chọn giống bằng hệ gen, robot và AI. Bộ KH&CN chỉ ra một số đề xuất chưa đạt tiêu chí công nghệ chiến lược, thiên về mua sắm thiết bị hoặc chuyển đổi số mà thiếu nội dung nghiên cứu. Phó Thủ tướng yêu cầu hoàn thành phê duyệt các nhiệm vụ còn lại trong tháng 10 (phấn đấu ít nhất 20 nhiệm vụ), hoàn tất chọn đơn vị chủ trì và ký hợp đồng cho 17 nhiệm vụ trong tháng 11, không để nhiệm vụ đã duyệt thiếu kinh phí.",
+        "key_points": [
+          "Họp sáng 20/10/2026 tại Trụ sở Chính phủ, do Phó Thủ tướng Hồ Quốc Dũng chủ trì",
+          "29 đề xuất đợt đầu: 23 đạt, 6 không đạt; 17 nhiệm vụ đã được phê duyệt tính đến 19/10",
+          "Tổng kinh phí đề xuất hơn 2.319 tỷ đồng; 65,5% ngân sách nhà nước, 34,5% (khoảng 800,7 tỷ) ngoài ngân sách",
+          "Lĩnh vực: vệ tinh, chip cho UAV, đường sắt, 5G chuyên dụng, liệu pháp tế bào, chọn giống hệ gen, robot, AI",
+          "Từ đầu tháng 9 Bộ KH&CN nhận thêm 10 đề xuất mới",
+          "Mục tiêu: ít nhất 20 nhiệm vụ được duyệt trong tháng 10; ký hợp đồng 17 nhiệm vụ trong tháng 11/2026",
+          "Bộ KH&CN dự kiến ban hành thông tư quản lý Chương trình KH&CN quốc gia đặc biệt về công nghệ chiến lược trong tháng 11"
+        ],
+        "source": "VietnamPlus (TTXVN)",
+        "url": "https://www.vietnamplus.vn/pho-thu-tuong-ho-quoc-dung-khan-truong-trien-khai-cac-nhiem-vu-phat-trien-cong-nghe-chien-luoc-post1143108.vnp",
+        "event_time": "2026-10-20",
+        "event_time_text": "Sáng 20/10/2026 (giờ Việt Nam), tại Trụ sở Chính phủ, Hà Nội",
+        "published": "2026-10-20T14:11+07:00"
+      },
+      {
+        "title": "TP HCM tuyển 10 chuyên gia nông nghiệp công nghệ cao, thu nhập đến 100 triệu đồng/tháng",
+        "summary": "Ban Quản lý Khu Nông nghiệp công nghệ cao TP HCM tuyển 10 chuyên gia, nhà khoa học ở 9 lĩnh vực như quy hoạch phát triển mạng lưới, chiến lược chính sách nông nghiệp, công nghệ sinh học ứng dụng, chọn tạo giống cây trồng, công nghệ sau thu hoạch và chuyển đổi số, cơ sở dữ liệu, AI. Người trúng tuyển được hỗ trợ ban đầu 100 triệu đồng, thu nhập hằng tháng 50–100 triệu đồng, kinh phí nghiên cứu 30 triệu đến 1 tỷ đồng mỗi người cho mỗi đề tài, và hỗ trợ tối đa 50% tiền thuê nhà (không quá 7 triệu đồng/tháng) nếu không được bố trí nhà công vụ. Chuyên gia phải cam kết làm việc ít nhất 12 tháng. Khu nông nghiệp công nghệ cao rộng 88,17 ha tại Củ Chi, là khu đầu tiên của cả nước; giai đoạn 2015–2023 mới thu hút được 7 chuyên gia trong và ngoài nước, trong khi nhu cầu tăng khi nghiên cứu mở rộng sang chỉnh sửa gen, robot, tự động hóa, AI, IoT và chuyển đổi xanh.",
+        "key_points": [
+          "Tuyển 10 chuyên gia, nhà khoa học ở 9 lĩnh vực",
+          "Hỗ trợ ban đầu 100 triệu đồng; thu nhập 50–100 triệu đồng/tháng",
+          "Kinh phí nghiên cứu 30 triệu – 1 tỷ đồng/người/đề tài",
+          "Hỗ trợ tối đa 50% tiền thuê nhà, không quá 7 triệu đồng/tháng",
+          "Cam kết làm việc tối thiểu 12 tháng",
+          "Khu NNCNC TP HCM rộng 88,17 ha ở Củ Chi; 2015–2023 chỉ thu hút 7 chuyên gia"
+        ],
+        "source": "VnExpress",
+        "url": "https://vnexpress.net/tp-hcm-tra-luong-den-100-trieu-dong-cho-chuyen-gia-nong-nghiep-cong-nghe-cao-5134566.html",
+        "event_time": null,
+        "event_time_text": "Thông báo tuyển dụng được đưa tin ngày 20/10/2026; bài không nêu ngày ban hành thông báo",
+        "published": "2026-10-20T13:32+07:00"
+      },
+      {
+        "title": "Nhật Bản phóng tàu MMX lấy mẫu vật mặt trăng Phobos của Sao Hỏa",
+        "summary": "Tàu thăm dò Martian Moons eXploration (MMX) của Nhật Bản đã được tên lửa H3 phóng từ Trung tâm Vũ trụ Tanegashima lúc 4h41 ngày 20/10 giờ Nhật (2h41 giờ Hà Nội). Tàu sẽ bay khoảng 10 tháng, dự kiến đến Sao Hỏa khoảng tháng 8/2027 để nghiên cứu hai mặt trăng Phobos và Deimos; nếu thành công, đây sẽ là sứ mệnh đầu tiên đáp xuống Phobos và đưa mẫu vật về Trái Đất, với khoang mẫu dự kiến hạ cánh ở Australia năm 2031. Xe tự hành Idefix do Pháp – Đức phát triển sẽ khám phá bề mặt Phobos, còn tàu đổ bộ bốn chân sẽ thu mẫu trong khoảng hai giờ. Mẫu vật được kỳ vọng giúp làm rõ hai mặt trăng là tiểu hành tinh bị bắt giữ hay hình thành từ một vụ va chạm lớn. Sứ mệnh trị giá khoảng 578 triệu USD, hợp tác giữa JAXA, NASA và ESA; NASA đóng góp khoảng 87 triệu USD để đổi lấy ít nhất 15% trong khoảng 10 gram mẫu vật.",
+        "key_points": [
+          "Phóng bằng tên lửa H3 từ Tanegashima lúc 4h41 ngày 20/10 giờ Nhật (2h41 giờ Việt Nam)",
+          "Hành trình khoảng 10 tháng, đến Sao Hỏa khoảng tháng 8/2027",
+          "Mục tiêu: lần đầu đáp xuống Phobos và đưa mẫu về Trái Đất; khoang mẫu dự kiến hạ cánh ở Australia năm 2031",
+          "Mang xe tự hành Idefix của Pháp – Đức; tàu đổ bộ thu mẫu trong khoảng 2 giờ",
+          "Chi phí khoảng 578 triệu USD; NASA góp khoảng 87 triệu USD để nhận ít nhất 15% trong khoảng 10 g mẫu"
+        ],
+        "source": "VnExpress (tổng hợp từ Space, The Guardian, Japan Times)",
+        "url": "https://vnexpress.net/nhat-ban-phong-tau-lay-mau-vat-mat-trang-sao-hoa-5134573.html",
+        "event_time": "2026-10-20T02:41+07:00",
+        "event_time_text": "4h41 ngày 20/10/2026 giờ Nhật Bản, tức 2h41 giờ Hà Nội",
+        "published": "2026-10-20T16:29+07:00"
+      },
+      {
+        "title": "DeepSeek mở mã nguồn DeepInfer, hỗ trợ cả GPU Nvidia và chip Huawei Ascend",
+        "summary": "Ngày 20/10/2026, công ty AI Trung Quốc DeepSeek công bố mã nguồn mở DeepInfer, khung suy luận (inference) đang vận hành các dịch vụ thương mại của hãng, trên GitHub theo giấy phép Apache 2.0. Theo DeepSeek, một cụm máy của hãng phục vụ 155 nghìn tỷ token mỗi ngày; các kỹ thuật như giải mã suy đoán (speculative decoding) giúp tăng thông lượng ước tính 4–7%, và một kỹ thuật khác gần như giảm một nửa khối lượng tính toán prefill. DeepInfer hiện chỉ hỗ trợ mô hình DeepSeek-V4.1-Flash, chạy trên GPU Nvidia Blackwell (SM100) và NPU Huawei Ascend 950, dù mọi số liệu benchmark công bố đều đo trên chip Nvidia và do DeepSeek tự đưa ra. Hãng vẫn giữ lại mã quản lý bộ nhớ đệm key-value và cân bằng tải vì gắn chặt với hạ tầng nội bộ. Việc phát hành diễn ra một ngày sau khi Bộ An ninh Nội địa Mỹ yêu cầu các cơ quan dân sự liên bang gỡ bỏ sản phẩm DeepSeek.",
+        "key_points": [
+          "Mã nguồn mở trên GitHub, giấy phép Apache 2.0; khởi nguồn từ vLLM",
+          "Một cụm máy DeepSeek phục vụ 155 nghìn tỷ token/ngày; doanh thu giờ thấp điểm khoảng 38 USD/GPU/giờ",
+          "Giải mã suy đoán giúp tăng thông lượng ước tính 4–7%; kỹ thuật khác gần như giảm một nửa tính toán prefill",
+          "Hỗ trợ Nvidia Blackwell SM100 và Huawei Ascend 950; hiện chỉ chạy DeepSeek-V4.1-Flash",
+          "Cấu hình hiệu quả nhỏ nhất: 64 GPU cho prefill và 64 GPU cho decode",
+          "Chưa công bố mã quản lý KV cache và cân bằng tải"
+        ],
+        "source": "SiliconANGLE",
+        "url": "https://siliconangle.com/2026/10/20/deepseek-open-sources-deepinfer-the-inference-framework-behind-its-production-services/",
+        "event_time": "2026-10-20",
+        "event_time_text": "DeepSeek công bố mã nguồn ngày 20/10/2026",
+        "published": "2026-10-20T23:11Z"
+      },
+      {
+        "title": "Sự cố điện ở trung tâm dữ liệu Google Cloud London làm tê liệt Revolut và nhiều ngân hàng Anh",
+        "summary": "Sáng 20/10/2026, khu vực europe-west2 (London) của Google Cloud gặp sự cố; Google cho biết một 'sự kiện về điện' (power event) đã gây gián đoạn ở vùng europe-west2-b, kéo theo lỗi và mất kết nối mạng chập chờn. Sự cố bắt đầu khoảng 7h sáng giờ Anh, làm gián đoạn dịch vụ của Revolut (đăng nhập ứng dụng, chuyển tiền, thanh toán thẻ, rút tiền) tại Anh và Ireland, cùng các vấn đề được báo cáo ở Lloyds, HSBC, hãng giao vận DPD và nền tảng video phục vụ phiên tòa trực tuyến ở Anh và xứ Wales. Riêng tại Ireland, Revolut có 3,4 triệu khách hàng; hãng khẳng định tiền và dữ liệu của khách hàng vẫn an toàn. Sự cố kéo dài vài giờ; Google sau đó cho biết đã khắc phục sự cố điện và giảm tác động cho phần lớn khách hàng, nhưng vẫn còn một số rất nhỏ khách hàng bị ảnh hưởng. AIB và Bank of Ireland cho biết không bị ảnh hưởng.",
+        "key_points": [
+          "Google xác nhận 'power event' gây sự cố ở vùng europe-west2-b (London)",
+          "Bắt đầu khoảng 7h sáng 20/10 giờ Anh (khoảng 13h giờ Việt Nam)",
+          "Revolut bị gián đoạn nhiều dịch vụ; riêng Ireland có 3,4 triệu khách hàng Revolut",
+          "Lloyds, HSBC, DPD và nền tảng video tòa án Anh – xứ Wales cũng báo cáo sự cố",
+          "Kéo dài vài giờ; Google nói đã giảm tác động cho phần lớn khách hàng"
+        ],
+        "source": "The Irish Times",
+        "url": "https://www.irishtimes.com/business/2026/10/20/revolut-services-hit-by-outage-including-in-ireland/",
+        "event_time": "2026-10-20T13:08+07:00",
+        "event_time_text": "Bắt đầu khoảng 7h08 sáng 20/10/2026 giờ Anh (6h08 GMT theo AP), tức khoảng 13h08 giờ Việt Nam; kéo dài vài giờ",
+        "published": "2026-10-20 17:33 (giờ Ireland; trang không ghi rõ múi giờ)"
+      }
+    ]
+  }
+}
