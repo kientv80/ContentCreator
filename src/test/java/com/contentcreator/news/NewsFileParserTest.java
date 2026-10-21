@@ -118,4 +118,24 @@ class NewsFileParserTest {
     assertThatThrownBy(() -> NewsFileParser.parse("[1,2]", TODAY)).isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> NewsFileParser.parse("", TODAY)).isInstanceOf(IllegalArgumentException.class);
   }
+
+  private static String one(String source, String url) {
+    String json = "{\"sections\":{\"domestic\":[{\"title\":\"T\",\"summary\":\"s\",\"source\":\"" + source + "\",\"url\":\"" + url + "\"}]}}";
+    return NewsFileParser.parse(json, java.time.LocalDate.of(2026, 10, 20)).get(0).summary();
+  }
+
+  @Test
+  void anUnsafeLinkBecomesPlainTextSource() {
+    for (String url : new String[] {"https://vnexpress.net@evil.example/x", "https://xn--vnexprss-x9a.net/a", "http://169.254.169.254/",
+        "https://vnexpress.net/\\u202Ex", "javascript:alert(1)", "https://vnexpress.net/a b"}) {
+      assertThat(one("VnExpress", url)).as(url).isEqualTo("**T**: s (Nguồn: VnExpress)");
+    }
+  }
+
+  @Test
+  void aDomainLikeSourceMustMatchTheLinkHost() {
+    assertThat(one("vnexpress.net", "https://www.vnexpress.net/a")).isEqualTo("**T**: s [vnexpress.net](https://www.vnexpress.net/a)");
+    assertThat(one("vnexpress.net", "https://evil.example/a")).isEqualTo("**T**: s (Nguồn: vnexpress.net)");
+    assertThat(one("VnExpress", "https://evil.example/a")).isEqualTo("**T**: s [VnExpress](https://evil.example/a)");
+  }
 }

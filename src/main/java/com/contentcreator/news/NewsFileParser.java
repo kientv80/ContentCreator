@@ -105,30 +105,26 @@ public final class NewsFileParser {
 
   /** {@code **Title**: text [Source](url)}; the title and the link are left out when missing. */
   private static String paragraph(JsonNode story) {
-    String text = clean(text(story, "summary"));
+    String text = NewsText.clean(text(story, "summary"));
     if (text == null) {
       return null;
     }
-    String title = clean(text(story, "title"));
-    String source = clean(text(story, "source"));
+    String title = NewsText.clean(text(story, "title"));
+    String source = NewsText.clean(text(story, "source"));
     String url = text(story, "url");
     StringBuilder p = new StringBuilder();
     if (title != null) p.append("**").append(title).append("**: ");
     p.append(text);
     if (source != null) {
       p.append(' ');
-      if (url != null && url.matches("(?i)^https?://\\S+$")) {
+      String host = url == null ? null : SafeLinks.host(url);
+      if (host != null && SafeLinks.labelMatchesHost(source, host)) {
         p.append('[').append(source).append("](").append(url.replace(")", "%29")).append(')');
       } else {
         p.append("(Nguồn: ").append(source).append(')');
       }
     }
     return p.toString();
-  }
-
-  /** Removes the characters the markup uses, so a story cannot break or fake the formatting. */
-  private static String clean(String s) {
-    return s == null ? null : s.replace("*", "").replace("[", "(").replace("]", ")").trim();
   }
 
   private static String text(JsonNode node, String field) {

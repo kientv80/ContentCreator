@@ -118,4 +118,78 @@ class NewsFileWorkerTest {
     worker(true, 0, 100000).scheduledScan();
     assertThat(count()).isEqualTo(1);
   }
+
+  private int failedCount() throws IOException {
+    try (var failed = Files.list(dir.resolve("failed"))) {
+      return (int) failed.count();
+    }
+  }
+
+  @Test
+  void aFileWithAnotherHardLinkIsRefusedAndMovedToFailed() throws IOException {
+    Path outside = Files.createTempFile("outside", ".json");
+    Files.writeString(outside, bulletin("Secret"));
+    Files.createLink(dir.resolve("hard.json"), outside);
+
+    assertThat(worker(true, 0, 100000).scanOnce()).isZero();
+
+    assertThat(count()).isZero();
+    assertThat(dir.resolve("hard.json")).doesNotExist();
+    assertThat(failedCount()).isEqualTo(1);
+    assertThat(outside).exists();
+    Files.delete(outside);
+  }
+
+  @Test
+  void aFileExactlyAtTheLimitIsReadAndOneByteOverIsRefused() throws IOException {
+    String text = bulletin("A");
+    int size = text.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+    Files.writeString(dir.resolve("exact.json"), text);
+
+    assertThat(worker(true, 0, size).scanOnce()).isEqualTo(1);
+
+    Files.writeString(dir.resolve("over.json"), bulletin("B"));
+    assertThat(worker(true, 0, size - 1).scanOnce()).isZero();
+    assertThat(failedCount()).isEqualTo(1);
+  }
+
+  @Test
+  void aSymbolicLinkAsProcessedOrFailedFolderStopsTheScan() throws IOException {
+    Path elsewhere = Files.createTempDirectory("elsewhere");
+    Files.createSymbolicLink(dir.resolve("processed"), elsewhere);
+    Files.writeString(dir.resolve("a.json"), bulletin("A"));
+
+    assertThat(worker(true, 0, 100000).scanOnce()).isZero();
+
+    assertThat(dir.resolve("a.json")).exists();
+    assertThat(count()).isZero();
+    try (var moved = Files.list(elsewhere)) {
+      assertThat(moved.count()).isZero();
+    }
+    Files.delete(dir.resolve("processed"));
+    Files.createSymbolicLink(dir.resolve("failed"), elsewhere);
+    assertThat(worker(true, 0, 100000).scanOnce()).isZero();
+    Files.delete(dir.resolve("failed"));
+    Files.delete(elsewhere);
+  }
+
+  @Test
+  void aRegularFileAsProcessedFolderStopsTheScan_andMissingFoldersAreFine() throws IOException {
+    assertThat(NewsFileWorker.folderIsSafe(dir.resolve("none"))).isTrue();
+    Files.writeString(dir.resolve("failed"), "x");
+    Files.writeString(dir.resolve("a.json"), bulletin("A"));
+
+    assertThat(worker(true, 0, 100000).scanOnce()).isZero();
+
+    assertThat(dir.resolve("a.json")).exists();
+    assertThat(NewsFileWorker.folderIsSafe(dir.resolve("failed"))).isFalse();
+  }
+
+  @Test
+  void linkCountIsOneForAPlainFile() throws IOException {
+    Path f = Files.writeString(dir.resolve("p.txt"), "x");
+    assertThat(NewsFileWorker.linkCount(f)).isEqualTo(1);
+    Files.createLink(dir.resolve("q.txt"), f);
+    assertThat(NewsFileWorker.linkCount(f)).isEqualTo(2);
+  }
 }

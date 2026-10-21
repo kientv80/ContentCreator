@@ -1,11 +1,14 @@
 package com.contentcreator.news;
 
 import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -58,6 +61,10 @@ public class NewsFileWorker {
       if (!Files.isDirectory(dir)) {
         return 0;
       }
+      if (!folderIsSafe(dir.resolve("processed")) || !folderIsSafe(dir.resolve("failed"))) {
+        log.error("news_file_scan refused: processed/ or failed/ is a link or not a directory");
+        return 0;
+      }
       List<Path> files;
       try (Stream<Path> list = Files.list(dir)) {
         files = list.filter(p -> p.getFileName().toString().toLowerCase().endsWith(".json")).sorted().toList();
@@ -79,14 +86,11 @@ public class NewsFileWorker {
     if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
       return 0;
     }
-    if (clock.instant().isBefore(Files.getLastModifiedTime(file).toInstant().plusSeconds(props.settleSeconds()))) {
+    if (clock.instant().isBefore(Files.getLastModifiedTime(file, LinkOption.NOFOLLOW_LINKS).toInstant().plusSeconds(props.settleSeconds()))) {
       return 0; // still being written, or just arrived: look again next time
     }
     try {
-      if (Files.size(file) > props.maxBytes()) {
-        throw new IllegalArgumentException("file larger than " + props.maxBytes() + " bytes");
-      }
-      List<NewsDraft> drafts = NewsFileParser.parse(Files.readString(file, StandardCharsets.UTF_8), LocalDate.now(clock.withZone(VIETNAM)));
+      List<NewsDraft> drafts = NewsFileParser.parse(readBounded(file), LocalDate.now(clock.withZone(VIETNAM)));
       int stored = 0;
       for (NewsDraft draft : drafts) {
         if (!repository.exists(draft)) {
@@ -101,6 +105,37 @@ public class NewsFileWorker {
       log.error("news_file_failed file={} reason={}", file.getFileName(), e.toString());
       move(dir, file, "failed");
       return 0;
+    }
+  }
+
+  /** True when the folder does not exist yet or is a real directory (not a symbolic link, not a file). */
+  static boolean folderIsSafe(Path folder) {
+    return !Files.exists(folder, LinkOption.NOFOLLOW_LINKS) || Files.isDirectory(folder, LinkOption.NOFOLLOW_LINKS);
+  }
+
+  /**
+   * Reads the file through one no-follow handle and never more than the size limit: refuses a file with more than
+   * one hard link, and stops after limit+1 bytes so a file that grows while being read cannot exceed the cap.
+   */
+  private String readBounded(Path file) throws IOException {
+    try (SeekableByteChannel channel = Files.newByteChannel(file, StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS)) {
+      if (linkCount(file) > 1) {
+        throw new IllegalArgumentException("file has more than one hard link");
+      }
+      byte[] bytes = Channels.newInputStream(channel).readNBytes((int) Math.min(props.maxBytes(), Integer.MAX_VALUE - 8) + 1);
+      if (bytes.length > props.maxBytes()) {
+        throw new IllegalArgumentException("file larger than " + props.maxBytes() + " bytes");
+      }
+      return new String(bytes, StandardCharsets.UTF_8);
+    }
+  }
+
+  /** The number of hard links to the file; 1 when the file system does not report it. */
+  static int linkCount(Path file) throws IOException {
+    try {
+      return ((Number) Files.getAttribute(file, "unix:nlink", LinkOption.NOFOLLOW_LINKS)).intValue();
+    } catch (UnsupportedOperationException | IllegalArgumentException e) {
+      return 1;
     }
   }
 

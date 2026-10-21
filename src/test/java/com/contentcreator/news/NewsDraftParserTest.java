@@ -44,4 +44,16 @@ class NewsDraftParserTest {
     assertThatThrownBy(() -> NewsDraftParser.parse("[not json]", TODAY)).isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> NewsDraftParser.parse(null, TODAY)).isInstanceOf(IllegalArgumentException.class);
   }
+
+  @Test
+  void markupCharactersAreNeutralisedInHeadlineAndSummary() {
+    String text = "[{\"headline\":\"**Big** [news](https://evil)\",\"summary\":\"See [x](https://evil.example) **now**\"},"
+        + "{\"headline\":\"***\",\"summary\":\"s\"}]";
+
+    List<NewsDraft> drafts = NewsDraftParser.parse(text, TODAY);
+
+    assertThat(drafts).hasSize(1);
+    assertThat(drafts.get(0).headline()).isEqualTo("Big (news)(https://evil)");
+    assertThat(drafts.get(0).summary()).isEqualTo("See (x)(https://evil.example) now");
+  }
 }

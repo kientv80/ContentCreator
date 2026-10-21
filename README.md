@@ -27,7 +27,9 @@ Watches a folder (default `~/Downloads/newssummary`, change with `CONTENTCREATOR
 `*.json` bulletin files. For each file it builds one news summary per section and inserts them into the same `news_summary` table as
 **unpublished drafts** (country VN, language `vi`) for an admin to review and publish. A file that was read moves to
 `processed/` inside the folder; one that cannot be read (bad JSON, larger than 2 MB) moves to `failed/`, with the reason in
-the log. A file modified in the last 5 seconds is left for the next scan, symbolic links are never followed, and a
+the log. A file modified in the last 5 seconds is left for the next scan, symbolic links are never followed (files are opened without following links, a file with more than one hard link is
+refused and moved to `failed/`, the size limit is enforced while reading, and the scan stops if `processed/` or `failed/` is a
+symbolic link or not a directory), and a
 story whose headline and date already exist for Vietnam is skipped, so re-dropping a file creates no duplicates.
 
 File format (as in `ban-tin-2026-10-20.json`):
@@ -47,9 +49,15 @@ File format (as in `ban-tin-2026-10-20.json`):
   heading becomes "📰 Tin <name>"). A section is a list of stories, or an object with an `items` list (like `stocks`).
 - The **headline** is the section heading; the **summary** has one paragraph per story, separated by a blank line, in a
   small markup the app renders as in the reference design: `**Title**: text [Source](https://link)` - bold lead-in,
-  then the text, then the source as a tappable underlined link. A story with no valid http(s) link ends with
-  "(Nguồn: Source)" instead. The characters `*`, `[` and `]` are removed from titles and texts so a story cannot
-  break the formatting.
+  then the text, then the source as a tappable underlined link. A story with no safe link ends with
+  "(Nguồn: Source)" as plain text instead. The characters `*`, `[` and `]` are removed from titles and texts (also for
+  drafts from the Anthropic API worker) so a story cannot break the formatting or plant links.
+- **Link rules** (`SafeLinks`): the URL must be `http` or `https`, at most 500 characters, with a host of ASCII letters,
+  digits, hyphens and at least one dot. It is rejected when it has user info (`@`), a raw IPv4/IPv6 address, a `xn--`
+  (punycode) or non-ASCII host, a port that is not digits, backslashes, spaces, control, bidi-override or zero-width
+  characters, or any of `* [ ] < > "`. When the source label looks like a domain (has a dot, no spaces, e.g.
+  `vnexpress.net`) it must equal the link's host or be a parent domain of it (`www.` ignored), otherwise the link is dropped.
+  A `)` in a URL is written as `%29`.
 - The summary column holds 5,000 characters (ElderEase migration V38). Stories that would not fit are left out whole,
   never cut in the middle.
 - `date` is the news date (today in Vietnam if missing or unreadable); for `stocks`, `session_date` is shown in the

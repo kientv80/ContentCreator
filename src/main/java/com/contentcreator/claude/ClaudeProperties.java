@@ -11,4 +11,13 @@ public record ClaudeProperties(
     int maxTokens,
     int webSearchMaxUses,
     String webSearchToolType,
-    int timeoutSeconds) {}
+    int timeoutSeconds) {
+
+  /** Never prints the API key. */
+  @Override
+  public String toString() {
+    return "ClaudeProperties[apiKey=" + (apiKey == null || apiKey.isBlank() ? "<unset>" : "<hidden>") + ", baseUrl=" + baseUrl
+        + ", model=" + model + ", maxTokens=" + maxTokens + ", webSearchMaxUses=" + webSearchMaxUses
+        + ", webSearchToolType=" + webSearchToolType + ", timeoutSeconds=" + timeoutSeconds + "]";
+  }
+}

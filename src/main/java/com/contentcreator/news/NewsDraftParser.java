@@ -42,8 +42,8 @@ public final class NewsDraftParser {
     }
     List<NewsDraft> drafts = new ArrayList<>();
     for (JsonNode node : root) {
-      String headline = text(node, "headline");
-      String summary = text(node, "summary");
+      String headline = blankToNull(NewsText.clean(text(node, "headline")));
+      String summary = blankToNull(NewsText.clean(text(node, "summary")));
       if (headline == null || summary == null) {
         continue;
       }
@@ -59,6 +59,10 @@ public final class NewsDraftParser {
     }
     String s = value.asText().trim();
     return s.isEmpty() ? null : s;
+  }
+
+  private static String blankToNull(String s) {
+    return s == null || s.isEmpty() ? null : s;
   }
 
   private static String cut(String s, int max) {
