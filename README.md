@@ -24,7 +24,7 @@ Settings are in `application.yml` under `contentcreator.news.worker` (cron, `run
 ## NewsFileWorker (bulletin files)
 
 Watches a folder (default `~/Downloads/newssummary`, change with `CONTENTCREATOR_NEWS_DIR`) every 30 seconds for new
-`*.json` bulletin files. For each file it builds news summaries and inserts them into the same `news_summary` table as
+`*.json` bulletin files. For each file it builds one news summary per section and inserts them into the same `news_summary` table as
 **unpublished drafts** (country VN, language `vi`) for an admin to review and publish. A file that was read moves to
 `processed/` inside the folder; one that cannot be read (bad JSON, larger than 2 MB) moves to `failed/`, with the reason in
 the log. A file modified in the last 5 seconds is left for the next scan, symbolic links are never followed, and a
@@ -42,14 +42,18 @@ File format (as in `ban-tin-2026-10-20.json`):
  }}
 ```
 
-- Every story in any section whose value is a list becomes one draft: headline = `title` (cut to 120), summary =
-  `summary` + " (Nguồn: <source>)" (the text is cut with "…" so the whole thing stays within 1,000 characters).
-  The `url` is not stored (the table has no column for it).
-- A section named `stocks` (an object with `items`) becomes **one** draft "Chứng khoán ngày 20/10: VN-Index 1.691,97
-  điểm", with the items' summaries joined and all their sources named.
-- The sample file gives 20 drafts: 7 domestic, 6 world, 6 science and tech, and 1 stock summary. Each is a separate
-  draft, so the admin can publish only the ones that suit elders and delete the rest.
-- `date` is the news date (today in Vietnam if missing or unreadable). The worker sets no other fields.
+- **One draft per section.** The sample file gives 4 drafts: "🏠 Tin trong nước", "🌍 Tin thế giới",
+  "📈 Tin chứng khoán (phiên gần nhất 20/10)" and "🔬 Tin khoa học & công nghệ" (a section name with no preset
+  heading becomes "📰 Tin <name>"). A section is a list of stories, or an object with an `items` list (like `stocks`).
+- The **headline** is the section heading; the **summary** has one paragraph per story, separated by a blank line, in a
+  small markup the app renders as in the reference design: `**Title**: text [Source](https://link)` - bold lead-in,
+  then the text, then the source as a tappable underlined link. A story with no valid http(s) link ends with
+  "(Nguồn: Source)" instead. The characters `*`, `[` and `]` are removed from titles and texts so a story cannot
+  break the formatting.
+- The summary column holds 5,000 characters (ElderEase migration V38). Stories that would not fit are left out whole,
+  never cut in the middle.
+- `date` is the news date (today in Vietnam if missing or unreadable); for `stocks`, `session_date` is shown in the
+  heading. The worker sets no other fields. The same headline and date is never inserted twice.
 - Turn it off with `CONTENTCREATOR_FILE_WORKER_ENABLED=false`.
 
 ## Run locally

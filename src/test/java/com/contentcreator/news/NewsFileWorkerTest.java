@@ -44,8 +44,8 @@ class NewsFileWorkerTest {
     assertThat(worker(true, 0, 100000).scanOnce()).isEqualTo(1);
 
     var row = jdbc.queryForMap("SELECT * FROM news_summary");
-    assertThat(row.get("HEADLINE")).isEqualTo("A");
-    assertThat(row.get("SUMMARY")).isEqualTo("Tóm tắt (Nguồn: VnExpress)");
+    assertThat(row.get("HEADLINE")).isEqualTo("🏠 Tin trong nước");
+    assertThat(row.get("SUMMARY")).isEqualTo("**A**: Tóm tắt (Nguồn: VnExpress)");
     assertThat(row.get("PUBLISHED")).isEqualTo(false);
     assertThat(row.get("COUNTRY_CODE")).isEqualTo("VN");
     assertThat(row.get("LANGUAGE")).isEqualTo("vi");

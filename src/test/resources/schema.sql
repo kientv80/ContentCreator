@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS news_summary (
     id           CHAR(36) PRIMARY KEY,
     headline     VARCHAR(120) NOT NULL,
-    summary      VARCHAR(1000) NOT NULL,
+    summary      VARCHAR(5000) NOT NULL,
     news_date    DATE NOT NULL,
     country_code VARCHAR(2) NULL,
     language     VARCHAR(2) NOT NULL,

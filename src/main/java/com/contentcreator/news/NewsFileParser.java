@@ -5,28 +5,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
- * Builds drafts from a daily news bulletin file (see README for the format): a {@code date} and
- * {@code sections}, each a list of stories {@code {title, summary, source, url}}. The {@code stocks} section
- * (an object with an {@code items} list) becomes one market-summary draft. Every draft fits the news_summary
- * columns: headline at most 120 characters, summary at most 1,000 including the "(Nguồn: ...)" ending.
+ * Builds drafts from a daily news bulletin file (see README for the format): one draft per section. A section is
+ * a list of stories {@code {title, summary, source, url}}, or (like {@code stocks}) an object with an
+ * {@code items} list of the same. The draft's headline is the section's heading, e.g. "📈 Tin chứng khoán (phiên
+ * gần nhất 20/10)"; its summary holds one paragraph per story in the simple markup the app renders:
+ * {@code **Title**: text [Source](https://link)} (paragraphs separated by a blank line).
  */
 public final class NewsFileParser {
 
   static final int MAX_HEADLINE = 120;
-  static final int MAX_SUMMARY = 1000;
+  /** The news_summary.summary column limit (migration V38). */
+  static final int MAX_SUMMARY = 5000;
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final Map<String, String> HEADINGS = Map.of(
+      "domestic", "🏠 Tin trong nước",
+      "world", "🌍 Tin thế giới",
+      "stocks", "📈 Tin chứng khoán",
+      "science_tech", "🔬 Tin khoa học & công nghệ");
 
   private NewsFileParser() {}
 
   /**
    * @param json the file's text
    * @param today the day to use when the file has no valid {@code date}
-   * @return the drafts, possibly empty
+   * @return one draft per non-empty section, in file order
    * @throws IllegalArgumentException when the text is not a JSON object
    */
   public static List<NewsDraft> parse(String json, LocalDate today) {
@@ -44,59 +50,69 @@ public final class NewsFileParser {
     JsonNode sections = root.path("sections");
     sections.fieldNames().forEachRemaining(name -> {
       JsonNode section = sections.get(name);
-      if (section.isArray()) {
-        for (JsonNode story : section) {
-          NewsDraft draft = story(story, day);
-          if (draft != null) drafts.add(draft);
-        }
-      } else if (section.isObject() && section.path("items").isArray()) {
-        NewsDraft draft = market(section, day);
-        if (draft != null) drafts.add(draft);
+      JsonNode stories = section.isArray() ? section : section.path("items");
+      String summary = summary(stories);
+      if (summary != null) {
+        String sessionDay = section.path("session_date").asText("");
+        LocalDate shown = "stocks".equals(name) ? day(sessionDay, day) : day;
+        drafts.add(new NewsDraft(cut(heading(name, shown), MAX_HEADLINE), summary, day));
       }
     });
     return drafts;
   }
 
-  private static NewsDraft story(JsonNode node, LocalDate day) {
-    String title = text(node, "title");
-    String summary = text(node, "summary");
-    if (title == null || summary == null) {
-      return null;
-    }
-    return new NewsDraft(cut(title, MAX_HEADLINE), withSources(summary, text(node, "source")), day);
+  private static String heading(String name, LocalDate shown) {
+    String base = HEADINGS.getOrDefault(name, "📰 Tin " + name.replace('_', ' '));
+    return "stocks".equals(name) ? base + String.format(" (phiên gần nhất %02d/%02d)", shown.getDayOfMonth(), shown.getMonthValue()) : base;
   }
 
-  /** One draft for the stock-market section: the index line as the headline, the items' texts as the summary. */
-  private static NewsDraft market(JsonNode section, LocalDate day) {
-    StringBuilder body = new StringBuilder();
-    Set<String> sources = new LinkedHashSet<>();
-    for (JsonNode item : section.get("items")) {
-      String summary = text(item, "summary");
-      if (summary == null) {
+  /** One paragraph per usable story, as many as fit the column; {@code null} when there is none. */
+  private static String summary(JsonNode stories) {
+    if (!stories.isArray()) {
+      return null;
+    }
+    StringBuilder out = new StringBuilder();
+    for (JsonNode story : stories) {
+      String paragraph = paragraph(story);
+      if (paragraph == null) {
         continue;
       }
-      if (!body.isEmpty()) body.append(' ');
-      body.append(summary);
-      String source = text(item, "source");
-      if (source != null) sources.add(source);
+      int added = (out.isEmpty() ? 0 : 2) + paragraph.length();
+      if (out.length() + added > MAX_SUMMARY) {
+        break;
+      }
+      if (!out.isEmpty()) out.append("\n\n");
+      out.append(paragraph);
     }
-    if (body.isEmpty()) {
-      return null;
-    }
-    String headline = "Chứng khoán ngày " + String.format("%02d/%02d", day.getDayOfMonth(), day.getMonthValue());
-    JsonNode first = section.path("indices").path(0);
-    if (first.hasNonNull("name") && first.hasNonNull("close")) {
-      headline += ": " + first.get("name").asText() + " " + String.format(java.util.Locale.forLanguageTag("vi"), "%,.2f", first.get("close").asDouble()) + " điểm";
-    }
-    return new NewsDraft(cut(headline, MAX_HEADLINE), withSources(body.toString(), sources.isEmpty() ? null : String.join(", ", sources)), day);
+    return out.isEmpty() ? null : out.toString();
   }
 
-  /** Appends "(Nguồn: X)", cutting the body (with an ellipsis) so the whole text stays within the column. */
-  static String withSources(String body, String source) {
-    String suffix = source == null ? "" : " (Nguồn: " + source + ")";
-    int room = MAX_SUMMARY - suffix.length();
-    String text = body.length() <= room ? body : body.substring(0, Math.max(0, room - 1)).stripTrailing() + "…";
-    return text + suffix;
+  /** {@code **Title**: text [Source](url)}; the title and the link are left out when missing. */
+  private static String paragraph(JsonNode story) {
+    String text = clean(text(story, "summary"));
+    if (text == null) {
+      return null;
+    }
+    String title = clean(text(story, "title"));
+    String source = clean(text(story, "source"));
+    String url = text(story, "url");
+    StringBuilder p = new StringBuilder();
+    if (title != null) p.append("**").append(title).append("**: ");
+    p.append(text);
+    if (source != null) {
+      p.append(' ');
+      if (url != null && url.matches("(?i)^https?://\\S+$")) {
+        p.append('[').append(source).append("](").append(url.replace(")", "%29")).append(')');
+      } else {
+        p.append("(Nguồn: ").append(source).append(')');
+      }
+    }
+    return p.toString();
+  }
+
+  /** Removes the characters the markup uses, so a story cannot break or fake the formatting. */
+  private static String clean(String s) {
+    return s == null ? null : s.replace("*", "").replace("[", "(").replace("]", ")").trim();
   }
 
   private static String text(JsonNode node, String field) {
@@ -112,11 +128,11 @@ public final class NewsFileParser {
     return s.length() <= max ? s : s.substring(0, max);
   }
 
-  private static LocalDate day(String s, LocalDate today) {
+  private static LocalDate day(String s, LocalDate fallback) {
     try {
       return LocalDate.parse(s.substring(0, Math.min(10, s.length())));
     } catch (DateTimeParseException e) {
-      return today;
+      return fallback;
     }
   }
 }
