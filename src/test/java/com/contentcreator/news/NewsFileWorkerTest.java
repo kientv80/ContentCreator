@@ -49,6 +49,7 @@ class NewsFileWorkerTest {
     assertThat(row.get("PUBLISHED")).isEqualTo(false);
     assertThat(row.get("COUNTRY_CODE")).isEqualTo("VN");
     assertThat(row.get("LANGUAGE")).isEqualTo("vi");
+    assertThat(row.get("CATEGORY")).isEqualTo("DOMESTIC");
     assertThat(dir.resolve("ban-tin.json")).doesNotExist();
     try (var done = Files.list(dir.resolve("processed"))) {
       assertThat(done.count()).isEqualTo(1);

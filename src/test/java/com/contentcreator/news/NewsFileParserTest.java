@@ -39,6 +39,29 @@ class NewsFileParserTest {
   }
 
   @Test
+  void theSampleSectionsGetTheirCategories() throws IOException {
+    assertThat(NewsFileParser.parse(sample(), TODAY)).extracting(NewsDraft::category)
+        .containsExactly("DOMESTIC", "WORLD", "STOCKS", "SCIENCE_TECH");
+  }
+
+  @Test
+  void sectionNamesMapToCategoriesIgnoringCase_andUnknownNamesAreOther() {
+    assertThat(NewsFileParser.category("domestic")).isEqualTo("DOMESTIC");
+    assertThat(NewsFileParser.category("World")).isEqualTo("WORLD");
+    assertThat(NewsFileParser.category("STOCKS")).isEqualTo("STOCKS");
+    assertThat(NewsFileParser.category("Science_Tech")).isEqualTo("SCIENCE_TECH");
+    assertThat(NewsFileParser.category("sports")).isEqualTo("OTHER");
+    assertThat(NewsFileParser.category("")).isEqualTo("OTHER");
+  }
+
+  @Test
+  void aMixedCaseOrUnknownSectionInAFileGetsTheMatchingCategory() {
+    String json = "{\"sections\":{\"World\":[{\"summary\":\"a\"}],\"sports\":[{\"summary\":\"b\"}]}}";
+
+    assertThat(NewsFileParser.parse(json, TODAY)).extracting(NewsDraft::category).containsExactly("WORLD", "OTHER");
+  }
+
+  @Test
   void aStoryWithoutALinkNamesItsSource_andTheMarkupCharactersAreRemovedFromTheTexts() {
     String json = "{\"date\":\"2026-10-20\",\"sections\":{\"domestic\":["
         + "{\"title\":\"A *b* [c]\",\"summary\":\"Có **đậm** và [nhãn](x)\",\"source\":\"VnExpress\"},"

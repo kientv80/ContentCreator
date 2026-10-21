@@ -55,10 +55,26 @@ public final class NewsFileParser {
       if (summary != null) {
         String sessionDay = section.path("session_date").asText("");
         LocalDate shown = "stocks".equals(name) ? day(sessionDay, day) : day;
-        drafts.add(new NewsDraft(cut(heading(name, shown), MAX_HEADLINE), summary, day));
+        drafts.add(new NewsDraft(cut(heading(name, shown), MAX_HEADLINE), summary, day, category(name)));
       }
     });
     return drafts;
+  }
+
+  /**
+   * Maps a bulletin section name to a news_summary category code (case-insensitive).
+   *
+   * @param name the section name, e.g. {@code science_tech}
+   * @return DOMESTIC, WORLD, STOCKS or SCIENCE_TECH; OTHER for any other name
+   */
+  static String category(String name) {
+    return switch (name.toLowerCase(java.util.Locale.ROOT)) {
+      case "domestic" -> "DOMESTIC";
+      case "world" -> "WORLD";
+      case "stocks" -> "STOCKS";
+      case "science_tech" -> "SCIENCE_TECH";
+      default -> NewsDraft.OTHER;
+    };
   }
 
   private static String heading(String name, LocalDate shown) {

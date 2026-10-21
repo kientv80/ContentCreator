@@ -47,7 +47,7 @@ public final class NewsDraftParser {
       if (headline == null || summary == null) {
         continue;
       }
-      drafts.add(new NewsDraft(cut(headline, MAX_HEADLINE), cut(summary, MAX_SUMMARY), day(text(node, "newsDate"), today)));
+      drafts.add(new NewsDraft(cut(headline, MAX_HEADLINE), cut(summary, MAX_SUMMARY), day(text(node, "newsDate"), today), NewsDraft.OTHER));
     }
     return drafts;
   }

@@ -44,7 +44,7 @@ class NewsSummaryWorkerTest {
   }
 
   private static NewsDraft draft(String headline) {
-    return new NewsDraft(headline, "Tóm tắt " + headline + " (Nguồn: VnExpress)", LocalDate.of(2026, 10, 20));
+    return new NewsDraft(headline, "Tóm tắt " + headline + " (Nguồn: VnExpress)", LocalDate.of(2026, 10, 20), "OTHER");
   }
 
   @Test
@@ -61,9 +61,18 @@ class NewsSummaryWorkerTest {
       assertThat(row.get("PUBLISHED_AT")).isNull();
       assertThat(row.get("COUNTRY_CODE")).isEqualTo("VN");
       assertThat(row.get("LANGUAGE")).isEqualTo("vi");
+      assertThat(row.get("CATEGORY")).isEqualTo("OTHER");
       assertThat(row.get("IMAGE_URL")).isNull();
       assertThat(row.get("ID").toString()).hasSize(36);
     }
+  }
+
+  @Test
+  void theDraftsCategoryIsWrittenToTheRow() {
+    new NewsDraftRepository(jdbc).insert(
+        new NewsDraft("W", "s", LocalDate.of(2026, 10, 20), "WORLD"), java.time.Instant.parse("2026-10-20T01:00:00Z"));
+
+    assertThat(jdbc.queryForObject("SELECT category FROM news_summary WHERE headline = 'W'", String.class)).isEqualTo("WORLD");
   }
 
   @Test

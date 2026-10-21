@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS news_summary (
     news_date    DATE NOT NULL,
     country_code VARCHAR(2) NULL,
     language     VARCHAR(2) NOT NULL,
+    category     VARCHAR(20) NOT NULL DEFAULT 'OTHER',
     image_url    VARCHAR(512) NULL,
     audio_url    VARCHAR(512) NULL,
     published    BOOLEAN NOT NULL DEFAULT FALSE,

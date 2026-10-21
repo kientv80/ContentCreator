@@ -22,6 +22,7 @@ class NewsDraftParserTest {
     assertThat(drafts.get(0).headline()).hasSize(120);
     assertThat(drafts.get(0).summary()).hasSize(1000);
     assertThat(drafts.get(0).newsDate()).isEqualTo(LocalDate.of(2026, 10, 19));
+    assertThat(drafts.get(0).category()).isEqualTo("OTHER");
   }
 
   @Test

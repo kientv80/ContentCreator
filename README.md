@@ -54,6 +54,10 @@ File format (as in `ban-tin-2026-10-20.json`):
   never cut in the middle.
 - `date` is the news date (today in Vietnam if missing or unreadable); for `stocks`, `session_date` is shown in the
   heading. The worker sets no other fields. The same headline and date is never inserted twice.
+- The **category** column (`DOMESTIC`, `WORLD`, `STOCKS`, `SCIENCE_TECH`, `OTHER`; ElderEase migration **V40**) is set from the
+  section name, matched case-insensitively (`domestic`, `world`, `stocks`, `science_tech`); any other section is `OTHER`.
+  Drafts from the Anthropic API worker are always `OTHER`. **Apply ElderEase V40 before running this version**: the
+  INSERT writes `news_summary.category` and fails without the column. The duplicate check is unchanged.
 - Turn it off with `CONTENTCREATOR_FILE_WORKER_ENABLED=false`.
 
 ## Run locally
@@ -66,6 +70,8 @@ File format (as in `ban-tin-2026-10-20.json`):
 CREATE USER 'contentcreator'@'%' IDENTIFIED BY '<password>';
 GRANT SELECT, INSERT ON elderfriend.news_summary TO 'contentcreator'@'%';
 ```
+
+The grant stays `SELECT, INSERT` (V40 adds a column, no new privilege is needed).
 
 3. Start it:
 
