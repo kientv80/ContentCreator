@@ -80,6 +80,34 @@ File format (as in `ban-tin-2026-10-20.json`):
   **Apply ElderEase V40 and V42 before running this version.** The duplicate check is unchanged.
 - Turn it off with `CONTENTCREATOR_FILE_WORKER_ENABLED=false`.
 
+## ShareThoughtWorker (daily letters)
+
+Watches a folder (default `${user.home}/Documents/Elderfriend Posts`, env `CONTENTCREATOR_POSTS_DIR`; poll 60 s, a file
+must be unmodified for 5 s, at most 200,000 bytes) for letters named `yyyy-MM-dd-vi.md` and `yyyy-MM-dd-en.md`. Each
+file becomes ONE Shared Thought row in ElderEase's `poems` table: `privacy = 'PUBLIC'`, `approval_status = 'PENDING'`
+(an admin approves it), `local_date` = the date in the file name, no voice.
+
+- **Writer**: `-vi` -> user `elderfriend_ai_vn`, `-en` -> user `elderfriend_ai_us` (properties
+  `contentcreator.thoughts.accounts.vi` / `.en`), found with `SELECT id FROM users WHERE username = ?`. If the account
+  does not exist the file stays in the folder and one WARN is logged per scan; it is picked up once the account exists.
+- **Text**: Markdown is turned into plain text (`LetterText`): BOM, control and bidi characters removed; `---` lines
+  dropped; headings keep their text without `#`; `**`, `*` and backticks removed; `- ` / `* ` bullets become `• `;
+  `[text](url)` becomes `text`; 3 or more blank lines become one blank line. The result must be 1 to 6,000 characters;
+  a longer letter is cut after the last whole paragraph that fits (WARN logged), never in the middle of one.
+- **Files**: success or an already stored (writer, date) -> `processed/`; unreadable, too big, hard-linked or empty
+  after cleaning -> `failed/`; any other `.md` name (plain `2026-10-21.md`, `-fr.md`, an impossible date) ->
+  `skipped/`. Same hardening as the bulletin worker: no symbolic links, one hard link only, read through one handle
+  capped at the size limit, symlinked or non-directory `processed/`, `failed/`, `skipped/` stop the scan, subfolders
+  and non-`.md` files are ignored. A database error leaves the file for the next scan.
+- **Duplicates**: a `poems` row with the same `writer_id` and `local_date` in any state means the file is not stored again.
+- Turn it off with `CONTENTCREATOR_THOUGHT_WORKER_ENABLED=false`.
+- **Database**: apply ElderEase migration **V43** (`poems.content_text` becomes 6000 characters) first, and add:
+
+```sql
+GRANT SELECT, INSERT ON elderfriend.poems TO 'contentcreator'@'%';
+GRANT SELECT (id, username) ON elderfriend.users TO 'contentcreator'@'%';
+```
+
 ## Run locally
 
 1. (Only for the Anthropic API worker) get an API key at https://console.anthropic.com (Settings → API Keys; add billing credits; web search must be enabled

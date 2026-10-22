@@ -29,6 +29,17 @@ contentcreator:
       zone: Asia/Ho_Chi_Minh
       run-on-startup: ${CONTENTCREATOR_RUN_ON_STARTUP:false}
       max-items: 10
+  thoughts:
+    enabled: ${CONTENTCREATOR_THOUGHT_WORKER_ENABLED:true}
+    # Letters named yyyy-MM-dd-vi.md / yyyy-MM-dd-en.md become PENDING Shared Thoughts; done files move to processed/,
+    # bad ones to failed/, other names to skipped/.
+    directory: ${CONTENTCREATOR_POSTS_DIR:${user.home}/Documents/Elderfriend Posts}
+    poll-seconds: 60
+    settle-seconds: 5
+    max-bytes: 200000
+    accounts:
+      vi: elderfriend_ai_vn
+      en: elderfriend_ai_us
   claude:
     # Never commit the key: set ANTHROPIC_API_KEY in the environment.
     api-key: ${ANTHROPIC_API_KEY:}

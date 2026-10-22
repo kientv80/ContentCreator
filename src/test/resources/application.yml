@@ -20,6 +20,15 @@ contentcreator:
       zone: Asia/Ho_Chi_Minh
       run-on-startup: false
       max-items: 10
+  thoughts:
+    enabled: false
+    directory: /nonexistent
+    poll-seconds: 3600
+    settle-seconds: 0
+    max-bytes: 200000
+    accounts:
+      vi: elderfriend_ai_vn
+      en: elderfriend_ai_us
   claude:
     api-key: test-key
     base-url: http://claude.test

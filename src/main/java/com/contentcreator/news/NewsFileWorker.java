@@ -111,7 +111,7 @@ public class NewsFileWorker {
   }
 
   /** True when the folder does not exist yet or is a real directory (not a symbolic link, not a file). */
-  static boolean folderIsSafe(Path folder) {
+  public static boolean folderIsSafe(Path folder) {
     return !Files.exists(folder, LinkOption.NOFOLLOW_LINKS) || Files.isDirectory(folder, LinkOption.NOFOLLOW_LINKS);
   }
 
@@ -133,7 +133,7 @@ public class NewsFileWorker {
   }
 
   /** The number of hard links to the file; 1 when the file system does not report it. */
-  static int linkCount(Path file) throws IOException {
+  public static int linkCount(Path file) throws IOException {
     try {
       return ((Number) Files.getAttribute(file, "unix:nlink", LinkOption.NOFOLLOW_LINKS)).intValue();
     } catch (UnsupportedOperationException | IllegalArgumentException e) {

@@ -28,3 +28,26 @@ MERGE INTO news_category (code, emoji, name_en, name_vi, sort_order, active) KEY
     ('STOCKS', '📈', 'Stocks', 'Chứng khoán', 3, TRUE),
     ('SCIENCE_TECH', '🔬', 'Science & tech', 'Khoa học & công nghệ', 4, TRUE),
     ('OTHER', '📰', 'Other', 'Khác', 5, TRUE);
+
+CREATE TABLE IF NOT EXISTS users (
+    id       CHAR(36) PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS poems (
+    id               CHAR(36) PRIMARY KEY,
+    writer_id        CHAR(36) NOT NULL REFERENCES users(id),
+    content_text     VARCHAR(6000) NULL,
+    voice_url        VARCHAR(500) NULL,
+    voice_seconds    INT NULL,
+    privacy          VARCHAR(12) NOT NULL,
+    approval_status  VARCHAR(10) NOT NULL,
+    rejection_reason VARCHAR(200) NULL,
+    decided_at       DATETIME(6) NULL,
+    local_date       DATE NOT NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NOT NULL,
+    deleted_at       DATETIME(6) NULL,
+    CONSTRAINT chk_poems_privacy CHECK (privacy IN ('PRIVATE', 'CAREGIVERS', 'PUBLIC')),
+    CONSTRAINT chk_poems_approval CHECK (approval_status IN ('NONE', 'PENDING', 'APPROVED', 'REJECTED'))
+);
