@@ -44,10 +44,10 @@ public class ThoughtRepository {
    * @return true when such a row exists
    */
   public boolean existsPost(String writerId, LocalDate localDate, String heading) {
-    String prefix = heading.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+    String prefix = heading.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
     Integer count =
         jdbc.queryForObject(
-            "SELECT COUNT(*) FROM poems WHERE writer_id = ? AND local_date = ? AND content_text LIKE ? ESCAPE '\\'",
+            "SELECT COUNT(*) FROM poems WHERE writer_id = ? AND local_date = ? AND content_text LIKE ? ESCAPE '!'",
             Integer.class, writerId, Date.valueOf(localDate), prefix);
     return count != null && count > 0;
   }
