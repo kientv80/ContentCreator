@@ -84,22 +84,23 @@ File format (as in `ban-tin-2026-10-20.json`):
 
 Watches a folder (default `${user.home}/Documents/Elderfriend Posts`, env `CONTENTCREATOR_POSTS_DIR`; poll 60 s, a file
 must be unmodified for 5 s, at most 200,000 bytes) for letters named `yyyy-MM-dd-vi.md` and `yyyy-MM-dd-en.md`. Each
-file becomes ONE Shared Thought row in ElderEase's `poems` table: `privacy = 'PUBLIC'`, `approval_status = 'PENDING'`
+file holds several posts, each starting with a `## Bài N: ...` / `## Post N: ...` heading; every post becomes ONE Shared Thought row in ElderEase's `poems` table: `privacy = 'PUBLIC'`, `approval_status = 'PENDING'`
 (an admin approves it), `local_date` = the date in the file name, no voice.
 
 - **Writer**: `-vi` -> user `elderfriend_ai_vn`, `-en` -> user `elderfriend_ai_us` (properties
   `contentcreator.thoughts.accounts.vi` / `.en`), found with `SELECT id FROM users WHERE username = ?`. If the account
   does not exist the file stays in the folder and one WARN is logged per scan; it is picked up once the account exists.
-- **Text**: Markdown is turned into plain text (`LetterText`): BOM, control and bidi characters removed; `---` lines
+- **Posts**: `LetterText.splitPosts` splits a file at each line starting with `## `; the `# title` and rules before the first `## ` are dropped, empty sections are dropped; a file with no `## ` is one post. Posts are inserted in reverse order, `created_at` one second apart, so Post 1 is the newest and listed first.
+- **Text**: each post's Markdown is turned into plain text (`LetterText`): BOM, control and bidi characters removed; `---` lines
   dropped; headings keep their text without `#`; `**`, `*` and backticks removed; `- ` / `* ` bullets become `• `;
-  `[text](url)` becomes `text`; 3 or more blank lines become one blank line. The result must be 1 to 6,000 characters;
-  a longer letter is cut after the last whole paragraph that fits (WARN logged), never in the middle of one.
-- **Files**: success or an already stored (writer, date) -> `processed/`; unreadable, too big, hard-linked or empty
+  `[text](url)` becomes `text`; 3 or more blank lines become one blank line. Each post must be 1 to 6,000 characters;
+  a longer post is cut after the last whole paragraph that fits (WARN logged), never in the middle of one.
+- **Files**: every post stored or already stored -> `processed/` (log `thought_done file=... posts=N stored=M`); unreadable, too big, hard-linked or empty
   after cleaning -> `failed/`; any other `.md` name (plain `2026-10-21.md`, `-fr.md`, an impossible date) ->
   `skipped/`. Same hardening as the bulletin worker: no symbolic links, one hard link only, read through one handle
   capped at the size limit, symlinked or non-directory `processed/`, `failed/`, `skipped/` stop the scan, subfolders
-  and non-`.md` files are ignored. A database error leaves the file for the next scan.
-- **Duplicates**: a `poems` row with the same `writer_id` and `local_date` in any state means the file is not stored again.
+  and non-`.md` files are ignored. A database error leaves the file for the next scan (posts already inserted are skipped on the retry).
+- **Duplicates**: a post is skipped when the same writer has a `poems` row on that `local_date`, in any state (also deleted), whose `content_text` starts with the post's heading line (LIKE wildcards escaped): at most one thought per post heading per account per day.
 - Turn it off with `CONTENTCREATOR_THOUGHT_WORKER_ENABLED=false`.
 - **Database**: apply ElderEase migration **V43** (`poems.content_text` becomes 6000 characters) first, and add:
 

@@ -63,11 +63,48 @@ class LetterTextTest {
   }
 
   @Test
-  void realLettersFitInOnePostAndKeepTheirStructure() throws IOException {
+  void splitPostsGivesOnePlainTextPostPerSectionAndDropsTheTitle() {
+    var posts = LetterText.splitPosts("# Title\n\n---\n\n## Post 1: **A**\n\n- x\n\n---\n\n## Post 2: B\nbody *two*\n");
+    assertThat(posts).containsExactly("Post 1: A\n\n• x", "Post 2: B\n\nbody two");
+  }
+
+  @Test
+  void splitPostsNullAndBlankGiveNone() {
+    assertThat(LetterText.splitPosts(null)).isEmpty();
+    assertThat(LetterText.splitPosts("---\n\n")).isEmpty();
+  }
+
+  @Test
+  void splitPostsWithoutASectionIsOnePostOfTheWholeText() {
+    assertThat(LetterText.splitPosts("# Title\n\nhello")).containsExactly("Title\n\nhello");
+  }
+
+  @Test
+  void splitPostsKeepsDeeperHeadingsInsideThePost() {
+    assertThat(LetterText.splitPosts("## A\nx\n### sub\ny")).containsExactly("A\n\nx\nsub\ny");
+  }
+
+  @Test
+  void splitPostsDropsSectionsWithoutBody() {
+    assertThat(LetterText.splitPosts("## A\n\n---\n## B\ntext\n## C")).containsExactly("B\n\ntext");
+  }
+
+  @Test
+  void splitPostsCutsALongPostAtAParagraph() {
+    String p = "x".repeat(4000);
+    assertThat(LetterText.splitPosts("## A\n\n" + p + "\n\n" + p)).containsExactly("A\n\n" + p);
+  }
+
+  @Test
+  void realLettersHaveTwoPostsEachWithinTheLimit() throws IOException {
     for (String name : new String[] {"2026-10-22-vi.md", "2026-10-22-en.md"}) {
-      String text = LetterText.toPlainText(Files.readString(Path.of("src/test/resources/letters", name)));
-      assertThat(text).isNotEmpty().hasSizeLessThanOrEqualTo(6000).doesNotContain("**", "`", "\n\n\n", "---");
-      assertThat(text).doesNotStartWith("#");
+      var posts = LetterText.splitPosts(Files.readString(Path.of("src/test/resources/letters", name)));
+      assertThat(posts).hasSize(2);
+      assertThat(posts.get(0)).startsWith(name.endsWith("vi.md") ? "Bài 1: " : "Post 1: ");
+      assertThat(posts.get(1)).startsWith(name.endsWith("vi.md") ? "Bài 2: " : "Post 2: ");
+      for (String post : posts) {
+        assertThat(post).hasSizeLessThanOrEqualTo(6000).doesNotContain("**", "`", "\n\n\n", "---", "#");
+      }
     }
   }
 }

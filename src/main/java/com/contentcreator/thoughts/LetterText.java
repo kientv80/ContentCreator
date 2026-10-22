@@ -1,10 +1,12 @@
 package com.contentcreator.thoughts;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Turns a Markdown letter into the plain text of one Shared Thought post. */
+/** Turns a Markdown letter into the plain text of its Shared Thought posts. */
 public final class LetterText {
 
   /** The longest text a post may have (ElderEase poems.content_text, migration V43). */
@@ -48,6 +50,62 @@ public final class LetterText {
     }
     String plain = out.toString().replaceAll("\\n{3,}", "\n\n").strip();
     return plain.length() <= MAX_CHARS ? plain : cutAtParagraph(plain);
+  }
+
+  /**
+   * Splits a letter into its posts: one per line starting with {@code "## "} (its heading line without the
+   * {@code ## }, a blank line, then its body), each converted with {@link #toPlainText(String)}. Text before the
+   * first {@code ## } (the letter's {@code # } title and rules) is dropped. Sections without a body are dropped, and
+   * a post longer than {@value #MAX_CHARS} characters is cut after its last whole paragraph that fits. A letter
+   * without any {@code ## } section is one post (the whole text).
+   *
+   * @param markdown the letter, or {@code null}
+   * @return the plain-text posts in file order, each 1..{@value #MAX_CHARS} characters; empty when none is usable
+   */
+  public static List<String> splitPosts(String markdown) {
+    List<String> posts = new ArrayList<>();
+    if (markdown == null) {
+      return posts;
+    }
+    String[] lines = markdown.replace("\r\n", "\n").replace('\r', '\n').split("\n", -1);
+    boolean sectioned = false;
+    for (String line : lines) {
+      if (line.startsWith("## ")) {
+        sectioned = true;
+        break;
+      }
+    }
+    if (!sectioned) {
+      String whole = toPlainText(markdown);
+      if (!whole.isEmpty()) {
+        posts.add(whole);
+      }
+      return posts;
+    }
+    String heading = null;
+    StringBuilder body = new StringBuilder();
+    for (String line : lines) {
+      if (line.startsWith("## ")) {
+        addPost(posts, heading, body);
+        heading = line.substring(3);
+        body.setLength(0);
+      } else if (heading != null) {
+        body.append(line).append('\n');
+      }
+    }
+    addPost(posts, heading, body);
+    return posts;
+  }
+
+  /** Adds the section as a post unless it has no heading text or no body text. */
+  private static void addPost(List<String> posts, String heading, StringBuilder body) {
+    if (heading == null || toPlainText(body.toString()).isEmpty()) {
+      return;
+    }
+    String post = toPlainText(heading + "\n\n" + body);
+    if (!post.isEmpty()) {
+      posts.add(post);
+    }
   }
 
   /** Keeps the whole paragraphs that fit in {@link #MAX_CHARS}; logs a warning because text is dropped. */

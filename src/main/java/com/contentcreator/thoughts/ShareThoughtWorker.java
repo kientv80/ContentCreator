@@ -12,6 +12,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
@@ -32,7 +33,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * The ShareThoughtWorker: watches a folder for daily letters named {@code yyyy-MM-dd-vi.md} / {@code yyyy-MM-dd-en.md}
- * and stores each as one Shared Thought (PUBLIC, PENDING moderation) in ElderEase's {@code poems} table, written by
+ * and stores each post (section {@code ## ...}) of a letter as its own Shared Thought (PUBLIC, PENDING moderation) in ElderEase's {@code poems} table, written by
  * the system account of the file's language. Done files move to {@code processed/}, unusable ones to
  * {@code failed/}, other {@code .md} names to {@code skipped/}. A file whose account does not exist yet, or one hit
  * by a database error, stays in place and is tried again on the next scan. Only regular files directly inside the
@@ -126,27 +127,34 @@ public class ShareThoughtWorker {
       }
       return 0;
     }
-    String text;
+    List<String> posts;
     try {
-      text = LetterText.toPlainText(readBounded(file));
+      posts = LetterText.splitPosts(readBounded(file));
     } catch (IOException | IllegalArgumentException e) {
       log.error("thought_failed file={} reason={}", name, e.toString());
       move(dir, file, "failed");
       return 0;
     }
-    if (text.isEmpty()) {
+    if (posts.isEmpty()) {
       log.error("thought_failed file={} reason=no usable text", name);
       move(dir, file, "failed");
       return 0;
     }
     try {
-      boolean known = repository.exists(writer.get(), day);
-      if (!known) {
-        repository.insertPending(writer.get(), text, day, clock.instant());
+      int stored = 0;
+      Instant base = clock.instant();
+      // newest first in the feed: insert the last post first so Post 1 gets the latest created_at
+      for (int i = posts.size() - 1; i >= 0; i--) {
+        String post = posts.get(i);
+        if (repository.existsPost(writer.get(), day, post.lines().findFirst().orElse(post))) {
+          continue;
+        }
+        repository.insertPending(writer.get(), post, day, base.plusSeconds(posts.size() - 1 - i));
+        stored++;
       }
       move(dir, file, "processed");
-      log.info("thought_done file={} stored={}", name, !known);
-      return known ? 0 : 1;
+      log.info("thought_done file={} posts={} stored={}", name, posts.size(), stored);
+      return stored;
     } catch (DataAccessException e) {
       log.error("thought_db_error file={} reason={} (left for the next scan)", name, e.toString());
       return 0;

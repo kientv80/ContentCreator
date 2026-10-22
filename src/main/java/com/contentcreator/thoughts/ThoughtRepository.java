@@ -35,14 +35,20 @@ public class ThoughtRepository {
   }
 
   /**
-   * Whether the writer already has a thought for that day, in any state (including deleted).
+   * Whether the writer already has a thought on that day whose text starts with the heading line, in any state
+   * (including deleted). LIKE wildcards in the heading are escaped.
    *
    * @param writerId the writer's user id
    * @param localDate the day of the letter
-   * @return true when a row exists
+   * @param heading the post's heading line
+   * @return true when such a row exists
    */
-  public boolean exists(String writerId, LocalDate localDate) {
-    Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM poems WHERE writer_id = ? AND local_date = ?", Integer.class, writerId, Date.valueOf(localDate));
+  public boolean existsPost(String writerId, LocalDate localDate, String heading) {
+    String prefix = heading.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+    Integer count =
+        jdbc.queryForObject(
+            "SELECT COUNT(*) FROM poems WHERE writer_id = ? AND local_date = ? AND content_text LIKE ? ESCAPE '\\'",
+            Integer.class, writerId, Date.valueOf(localDate), prefix);
     return count != null && count > 0;
   }
 

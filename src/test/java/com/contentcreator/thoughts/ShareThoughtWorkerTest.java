@@ -60,17 +60,19 @@ class ShareThoughtWorkerTest {
     copyLetter("2026-10-22-vi.md");
     copyLetter("2026-10-22-en.md");
 
-    assertThat(worker().scanOnce()).isEqualTo(2);
+    assertThat(worker().scanOnce()).isEqualTo(4);
 
-    var vi = jdbc.queryForMap("SELECT * FROM poems WHERE writer_id = 'vn-id'");
-    var en = jdbc.queryForMap("SELECT * FROM poems WHERE writer_id = 'us-id'");
+    var vi = jdbc.queryForMap("SELECT * FROM poems WHERE writer_id = 'vn-id' AND content_text LIKE 'Bài 1%'");
+    var en = jdbc.queryForMap("SELECT * FROM poems WHERE writer_id = 'us-id' AND content_text LIKE 'Post 1%'");
+    assertThat(count()).isEqualTo(4);
     assertThat(vi.get("PRIVACY")).isEqualTo("PUBLIC");
     assertThat(vi.get("APPROVAL_STATUS")).isEqualTo("PENDING");
     assertThat(vi.get("LOCAL_DATE").toString()).isEqualTo("2026-10-22");
-    assertThat((String) vi.get("CONTENT_TEXT")).startsWith("Thư Bạn Già AI");
+    assertThat((String) vi.get("CONTENT_TEXT")).startsWith("Bài 1: ");
     assertThat((String) en.get("CONTENT_TEXT")).doesNotContain("**");
     assertThat(filesIn("processed")).isEqualTo(2);
     assertThat(dir.resolve("2026-10-22-vi.md")).doesNotExist();
+    assertThat((String) en.get("CONTENT_TEXT")).startsWith("Post 1: ");
   }
 
   @Test
@@ -79,23 +81,92 @@ class ShareThoughtWorkerTest {
     copyLetter("2026-10-22-vi.md");
     copyLetter("2026-10-22-en.md");
 
-    assertThat(worker().scanOnce()).isEqualTo(1);
+    assertThat(worker().scanOnce()).isEqualTo(2);
 
     assertThat(dir.resolve("2026-10-22-en.md")).exists();
     assertThat(filesIn("failed")).isZero();
-    assertThat(count()).isEqualTo(1);
+    assertThat(count()).isEqualTo(2);
+  }
+
+  private void insertOld(String id, String text, String extra) {
+    jdbc.update("INSERT INTO poems (id, writer_id, content_text, privacy, approval_status, local_date, created_at, updated_at" + (extra.isEmpty() ? "" : ", deleted_at")
+        + ") VALUES ('" + id + "', 'vn-id', ?, 'PRIVATE', 'REJECTED', DATE '2026-10-22', NOW(), NOW()" + (extra.isEmpty() ? "" : ", NOW()") + ")", text);
+  }
+
+  private String heading(String letter, int n) throws IOException {
+    return LetterText.splitPosts(Files.readString(Path.of("src/test/resources/letters", letter))).get(n).lines().findFirst().orElseThrow();
   }
 
   @Test
-  void aKnownLetterIsNotInsertedTwiceButIsMovedToProcessed() throws IOException {
-    jdbc.update("INSERT INTO poems (id, writer_id, content_text, privacy, approval_status, local_date, created_at, updated_at, deleted_at) "
-        + "VALUES ('p1', 'vn-id', 'old', 'PRIVATE', 'REJECTED', DATE '2026-10-22', NOW(), NOW(), NOW())");
+  void reRunningALetterStoresNothingNew() throws IOException {
     copyLetter("2026-10-22-vi.md");
+    assertThat(worker().scanOnce()).isEqualTo(2);
+    Files.move(dir.resolve("processed").toFile().listFiles()[0].toPath(), dir.resolve("2026-10-22-vi.md"));
 
     assertThat(worker().scanOnce()).isZero();
 
-    assertThat(count()).isEqualTo(1);
+    assertThat(count()).isEqualTo(2);
+    assertThat(dir.resolve("2026-10-22-vi.md")).doesNotExist();
+  }
+
+  @Test
+  void aPostAlreadyStoredEvenDeletedIsSkippedAndOnlyTheOtherIsStored() throws IOException {
+    insertOld("p1", heading("2026-10-22-vi.md", 0) + "\n\nold body", "deleted");
+    copyLetter("2026-10-22-vi.md");
+
+    assertThat(worker().scanOnce()).isEqualTo(1);
+
+    assertThat(count()).isEqualTo(2);
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM poems WHERE content_text LIKE 'Bài 2%'", Integer.class)).isEqualTo(1);
     assertThat(filesIn("processed")).isEqualTo(1);
+  }
+
+  @Test
+  void aThoughtOfAnotherTextOnTheSameDayDoesNotBlockThePosts() throws IOException {
+    insertOld("p1", "something else", "");
+    copyLetter("2026-10-22-vi.md");
+
+    assertThat(worker().scanOnce()).isEqualTo(2);
+  }
+
+  @Test
+  void post1GetsTheLatestCreatedAtSoItListsFirstInTheFeed() throws IOException {
+    copyLetter("2026-10-22-en.md");
+    worker().scanOnce();
+
+    var rows = jdbc.queryForList("SELECT content_text, created_at FROM poems ORDER BY created_at DESC");
+    assertThat((String) rows.get(0).get("CONTENT_TEXT")).startsWith("Post 1: ");
+    assertThat((String) rows.get(1).get("CONTENT_TEXT")).startsWith("Post 2: ");
+    long gap = ((java.sql.Timestamp) rows.get(0).get("CREATED_AT")).getTime() - ((java.sql.Timestamp) rows.get(1).get("CREATED_AT")).getTime();
+    assertThat(gap).isEqualTo(1000);
+  }
+
+  @Test
+  void aFailureMidFileLeavesTheFileAndTheRetryStoresTheRestWithoutDuplicates() throws IOException {
+    copyLetter("2026-10-22-en.md");
+    jdbc.execute("ALTER TABLE poems ADD CONSTRAINT chk_p1 CHECK (content_text NOT LIKE 'Post 1%')");
+    try {
+      assertThat(worker().scanOnce()).isZero();
+      assertThat(dir.resolve("2026-10-22-en.md")).exists();
+      assertThat(count()).isEqualTo(1);
+    } finally {
+      jdbc.execute("ALTER TABLE poems DROP CONSTRAINT chk_p1");
+    }
+
+    assertThat(worker().scanOnce()).isEqualTo(1);
+
+    assertThat(count()).isEqualTo(2);
+    assertThat(dir.resolve("2026-10-22-en.md")).doesNotExist();
+    assertThat(filesIn("processed")).isEqualTo(1);
+  }
+
+  @Test
+  void aLetterWithoutSectionsIsOnePost() throws IOException {
+    Files.writeString(dir.resolve("2026-10-22-en.md"), "just a note");
+
+    assertThat(worker().scanOnce()).isEqualTo(1);
+
+    assertThat(jdbc.queryForObject("SELECT content_text FROM poems", String.class)).isEqualTo("just a note");
   }
 
   @Test
@@ -129,11 +200,11 @@ class ShareThoughtWorkerTest {
   @Test
   void aLongLetterIsStoredCutAtAParagraph() throws IOException {
     String p = "x".repeat(4000);
-    Files.writeString(dir.resolve("2026-10-22-en.md"), p + "\n\n" + p);
+    Files.writeString(dir.resolve("2026-10-22-en.md"), "## H\n\n" + p + "\n\n" + p);
 
     assertThat(worker().scanOnce()).isEqualTo(1);
 
-    assertThat(jdbc.queryForObject("SELECT content_text FROM poems", String.class)).isEqualTo(p);
+    assertThat(jdbc.queryForObject("SELECT content_text FROM poems", String.class)).isEqualTo("H\n\n" + p);
   }
 
   @Test
@@ -218,7 +289,7 @@ class ShareThoughtWorkerTest {
     assertThat(count()).isZero();
 
     worker(true, 0, 200000).scheduledScan();
-    assertThat(count()).isEqualTo(1);
-    assertThat(LocalDate.of(2026, 10, 22)).isEqualTo(jdbc.queryForObject("SELECT local_date FROM poems", java.sql.Date.class).toLocalDate());
+    assertThat(count()).isEqualTo(2);
+    assertThat(LocalDate.of(2026, 10, 22)).isEqualTo(jdbc.queryForObject("SELECT DISTINCT local_date FROM poems", java.sql.Date.class).toLocalDate());
   }
 }
