@@ -44,9 +44,9 @@ File format (as in `ban-tin-2026-10-20.json`):
  }}
 ```
 
-- **One draft per section.** The sample file gives 4 drafts: "🏠 Tin trong nước", "🌍 Tin thế giới",
-  "📈 Tin chứng khoán (phiên gần nhất 20/10)" and "🔬 Tin khoa học & công nghệ" (a section name with no preset
-  heading becomes "📰 Tin <name>"). A section is a list of stories, or an object with an `items` list (like `stocks`).
+- **One draft per section.** The sample file gives 4 drafts: "Tin trong nước", "Tin thế giới",
+  "Tin chứng khoán (phiên gần nhất 20/10)" and "Tin khoa học & công nghệ" (a section name with no preset
+  heading becomes "Tin <name>"). A section is a list of stories, or an object with an `items` list (like `stocks`).
 - The **headline** is the section heading; the **summary** has one paragraph per story, separated by a blank line, in a
   small markup the app renders as in the reference design: `**Title**: text [Source](https://link)` - bold lead-in,
   then the text, then the source as a tappable underlined link. A story with no safe link ends with
@@ -75,9 +75,21 @@ File format (as in `ban-tin-2026-10-20.json`):
   (once per section, nothing cached, so a category an admin adds is used on the next scan). If it is found, that is the
   draft's category; otherwise (unknown, inactive, or the lookup fails) the draft is filed as `OTHER` and the admin can
   create the category later and move the draft. Headings: `domestic`, `world`, `stocks`, `science_tech` keep their fixed
-  headings; any other section whose category exists is headed `<emoji> Tin <name_vi in lower case>` (e.g. `🩺 Tin sức khỏe`);
-  an unknown section is headed `📰 Tin <name>`. Drafts from the Anthropic API worker are always `OTHER`.
+  headings; any other section whose category exists is headed `Tin <name_vi in lower case>` (e.g. `Tin sức khỏe`);
+  an unknown section is headed `Tin <name>`. Drafts from the Anthropic API worker are always `OTHER`.
   **Apply ElderEase V40 and V42 before running this version.** The duplicate check is unchanged.
+- **Key points and AI analysis** (ElderEase design 5.36, migration **V46**, table `news_story_extra`): each story may also have
+  `key_points` (a list of strings, or one string with line breaks) and `analysis` (a string). Both are cleaned (control,
+  zero-width and bidi characters removed, trimmed); points are at most 300 characters each (cut at a word, ending with
+  `…`), at most 12 per story, blank points dropped; the analysis is at most 4,000 characters (cut at a sentence end, else a
+  word). Any other shape (missing, null, number, object) is ignored, and a story with neither part gets no row.
+  After the summary row, one `news_story_extra(summary_id, story_index, story_title, key_points, analysis, created_at)` row
+  is written per story that has a part: `story_index` is the 0-based position of the story among the stories actually
+  written into the summary text (stories left out by the 8,000-character budget are skipped and later indices shift, so it
+  matches the paragraph order), `story_title` is the title as written (at most 300), `key_points` holds the points joined with
+  `\n`. The summary and its extras are inserted in **one transaction**; if any insert fails the whole draft is rolled back
+  and the file stays in the folder for the next scan. The duplicate check is unchanged (an existing headline and date skips
+  the draft with its extras). **Apply ElderEase V46 before running this version.**
 - Turn it off with `CONTENTCREATOR_FILE_WORKER_ENABLED=false`.
 
 ## ShareThoughtWorker (daily letters)
@@ -122,6 +134,12 @@ GRANT SELECT ON elderfriend.news_category TO 'contentcreator'@'%';
 ```
 
 The second grant (read-only) is needed for the category lookup (V42); without it every draft is filed as `OTHER`.
+
+The third grant is needed for the story key points and analysis (V46); without it a draft with extras cannot be stored:
+
+```sql
+GRANT SELECT, INSERT ON elderfriend.news_story_extra TO 'contentcreator'@'%';
+```
 
 3. Start it:
 

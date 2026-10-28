@@ -45,7 +45,7 @@ class NewsFileWorkerTest {
     assertThat(worker(true, 0, 100000).scanOnce()).isEqualTo(1);
 
     var row = jdbc.queryForMap("SELECT * FROM news_summary");
-    assertThat(row.get("HEADLINE")).isEqualTo("🏠 Tin trong nước");
+    assertThat(row.get("HEADLINE")).isEqualTo("Tin trong nước");
     assertThat(row.get("SUMMARY")).isEqualTo("**A**: Tóm tắt (Nguồn: VnExpress)");
     assertThat(row.get("PUBLISHED")).isEqualTo(false);
     assertThat(row.get("COUNTRY_CODE")).isEqualTo("VN");
@@ -213,8 +213,8 @@ class NewsFileWorkerTest {
 
     assertThat(worker(true, 0, 100000).scanOnce()).isEqualTo(4);
 
-    assertThat(categoriesByHeadline()).containsEntry("🩺 Tin sức khỏe", "HEALTH").containsEntry("🌍 Tin thế giới", "WORLD")
-        .containsEntry("📰 Tin off", "OTHER").containsEntry("📰 Tin mystery", "OTHER").hasSize(4);
+    assertThat(categoriesByHeadline()).containsEntry("Tin sức khỏe", "HEALTH").containsEntry("Tin thế giới", "WORLD")
+        .containsEntry("Tin off", "OTHER").containsEntry("Tin mystery", "OTHER").hasSize(4);
   }
 
   @Test
@@ -227,8 +227,56 @@ class NewsFileWorkerTest {
 
     assertThat(w.scanOnce()).isEqualTo(4);
 
-    assertThat(categoriesByHeadline()).containsEntry("🌍 Tin thế giới", "OTHER").containsEntry("📰 Tin health", "OTHER").hasSize(4);
+    assertThat(categoriesByHeadline()).containsEntry("Tin thế giới", "OTHER").containsEntry("Tin health", "OTHER").hasSize(4);
     assertThat(dir.resolve("failed")).doesNotExist();
     assertThat(dir.resolve("a.json")).doesNotExist();
+  }
+
+  @Test
+  void theNewestRealBulletinStoresDraftsWithTheirStoryExtras() throws IOException {
+    try (var in = NewsFileWorkerTest.class.getResourceAsStream("/bulletin/ban-tin-2026-10-24.json")) {
+      Files.write(dir.resolve("ban-tin.json"), in.readAllBytes());
+    }
+
+    assertThat(worker(true, 0, 1_000_000).scanOnce()).isEqualTo(4);
+
+    var domestic = jdbc.queryForMap("SELECT id, summary FROM news_summary WHERE category = 'DOMESTIC'");
+    var extras = jdbc.queryForList("SELECT * FROM news_story_extra WHERE summary_id = ? ORDER BY story_index", domestic.get("ID"));
+    String[] paragraphs = domestic.get("SUMMARY").toString().split("\n\n");
+    assertThat(extras).hasSize(paragraphs.length);
+    for (var e : extras) {
+      assertThat(paragraphs[(Integer) e.get("STORY_INDEX")]).startsWith("**" + e.get("STORY_TITLE") + "**");
+    }
+    assertThat(extras.get(0).get("KEY_POINTS").toString().split("\n")).hasSize(6);
+    assertThat(extras.get(0).get("ANALYSIS").toString()).hasSize(334);
+    assertThat(extras.get(1).get("KEY_POINTS").toString().split("\n")).hasSize(5);
+    assertThat(extras.get(1).get("ANALYSIS").toString()).hasSize(224);
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_story_extra", Integer.class)).isEqualTo(22);
+  }
+
+  @Test
+  void aKnownDraftIsSkippedWithItsExtras() throws IOException {
+    String file = "{\"date\":\"2026-10-20\",\"sections\":{\"domestic\":[{\"title\":\"A\",\"summary\":\"s\",\"key_points\":[\"k\"]}]}}";
+    Files.writeString(dir.resolve("one.json"), file);
+    Files.writeString(dir.resolve("two.json"), file);
+
+    assertThat(worker(true, 0, 100000).scanOnce()).isEqualTo(1);
+
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_story_extra", Integer.class)).isEqualTo(1);
+  }
+
+  @Test
+  void aFailingExtraInsertRollsTheDraftBackAndLeavesTheFileForTheNextScan() throws IOException {
+    Files.writeString(dir.resolve("one.json"), "{\"date\":\"2026-10-20\",\"sections\":{\"domestic\":[{\"title\":\"A\",\"summary\":\"s\",\"key_points\":[\"k\"]}]}}");
+    jdbc.update("ALTER TABLE news_story_extra ADD CONSTRAINT chk_fail CHECK (story_title <> 'A')");
+    try {
+      assertThat(worker(true, 0, 100000).scanOnce()).isZero();
+    } finally {
+      jdbc.update("ALTER TABLE news_story_extra DROP CONSTRAINT chk_fail");
+    }
+
+    assertThat(count()).isZero();
+    assertThat(dir.resolve("one.json")).exists();
+    assertThat(dir.resolve("failed")).doesNotExist();
   }
 }

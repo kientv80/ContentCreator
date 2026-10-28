@@ -51,3 +51,13 @@ CREATE TABLE IF NOT EXISTS poems (
     CONSTRAINT chk_poems_privacy CHECK (privacy IN ('PRIVATE', 'CAREGIVERS', 'PUBLIC')),
     CONSTRAINT chk_poems_approval CHECK (approval_status IN ('NONE', 'PENDING', 'APPROVED', 'REJECTED'))
 );
+
+CREATE TABLE IF NOT EXISTS news_story_extra (
+    summary_id  CHAR(36) NOT NULL REFERENCES news_summary(id) ON DELETE CASCADE,
+    story_index INT NOT NULL,
+    story_title VARCHAR(300) NOT NULL,
+    key_points  TEXT NULL,
+    analysis    TEXT NULL,
+    created_at  DATETIME(6) NOT NULL,
+    PRIMARY KEY (summary_id, story_index)
+);

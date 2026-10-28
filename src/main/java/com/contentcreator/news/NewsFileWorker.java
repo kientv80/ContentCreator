@@ -103,6 +103,9 @@ public class NewsFileWorker {
       move(dir, file, "processed");
       log.info("news_file_done file={} drafts={} stored={}", file.getFileName(), drafts.size(), stored);
       return stored;
+    } catch (org.springframework.dao.DataAccessException e) {
+      log.error("news_db_error file={} reason={} (left for the next scan)", file.getFileName(), e.toString());
+      return 0; // a database problem is not the file's fault: the whole draft rolled back, try again next scan
     } catch (IOException | RuntimeException e) {
       log.error("news_file_failed file={} reason={}", file.getFileName(), e.toString());
       move(dir, file, "failed");

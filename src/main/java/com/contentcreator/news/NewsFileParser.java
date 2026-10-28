@@ -14,9 +14,11 @@ import java.util.function.Function;
 /**
  * Builds drafts from a daily news bulletin file (see README for the format): one draft per section. A section is
  * a list of stories {@code {title, summary, source, url}}, or (like {@code stocks}) an object with an
- * {@code items} list of the same. The draft's headline is the section's heading, e.g. "📈 Tin chứng khoán (phiên
+ * {@code items} list of the same. The draft's headline is the section's heading, e.g. "Tin chứng khoán (phiên
  * gần nhất 20/10)"; its summary holds one paragraph per story in the simple markup the app renders:
  * {@code **Title**: text [Source](https://link) · HH:mm dd/MM} (paragraphs separated by a blank line).
+ * Each story's {@code key_points} and {@code analysis} become the draft's extras (see {@link StoryExtras}), indexed by
+ * the story's position among the stories written into the summary.
  * The draft's category comes from a lookup passed in (the news_category table), so this class stays free of the database.
  */
 public final class NewsFileParser {
@@ -26,10 +28,10 @@ public final class NewsFileParser {
   static final int MAX_SUMMARY = 8000;
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Map<String, String> HEADINGS = Map.of(
-      "domestic", "🏠 Tin trong nước",
-      "world", "🌍 Tin thế giới",
-      "stocks", "📈 Tin chứng khoán",
-      "science_tech", "🔬 Tin khoa học & công nghệ");
+      "domestic", "Tin trong nước",
+      "world", "Tin thế giới",
+      "stocks", "Tin chứng khoán",
+      "science_tech", "Tin khoa học & công nghệ");
 
   private NewsFileParser() {}
 
@@ -56,13 +58,13 @@ public final class NewsFileParser {
     sections.fieldNames().forEachRemaining(name -> {
       JsonNode section = sections.get(name);
       JsonNode stories = section.isArray() ? section : section.path("items");
-      String summary = summary(stories);
-      if (summary != null) {
+      Written written = summary(stories);
+      if (written != null) {
         String sessionDay = section.path("session_date").asText("");
         LocalDate shown = "stocks".equals(name) ? day(sessionDay, day) : day;
         Optional<NewsCategory> category = categories.apply(code(name));
         String code = category.map(NewsCategory::code).orElse(NewsDraft.OTHER);
-        drafts.add(new NewsDraft(cut(heading(name, shown, category.orElse(null)), MAX_HEADLINE), summary, day, code));
+        drafts.add(new NewsDraft(cut(heading(name, shown, category.orElse(null)), MAX_HEADLINE), written.text(), day, code, written.extras()));
       }
     });
     return drafts;
@@ -79,21 +81,26 @@ public final class NewsFileParser {
     return name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "_");
   }
 
-  /** The preset heading for the four known sections; else the category's emoji and name; else a generic one. */
+  /** The preset heading for the four known sections; else "Tin" and the category name; else a generic one. */
   private static String heading(String name, LocalDate shown, NewsCategory category) {
     String generic = category == null
-        ? "📰 Tin " + name.replace('_', ' ')
-        : category.emoji() + " Tin " + category.nameVi().toLowerCase(Locale.ROOT);
+        ? "Tin " + name.replace('_', ' ')
+        : "Tin " + category.nameVi().toLowerCase(Locale.ROOT);
     String base = HEADINGS.getOrDefault(name, generic);
     return "stocks".equals(name) ? base + String.format(" (phiên gần nhất %02d/%02d)", shown.getDayOfMonth(), shown.getMonthValue()) : base;
   }
 
+  /** The summary text and the extras of the stories written into it (indexed by paragraph position). */
+  private record Written(String text, List<StoryExtra> extras) {}
+
   /** One paragraph per usable story, as many as fit the column; {@code null} when there is none. */
-  private static String summary(JsonNode stories) {
+  private static Written summary(JsonNode stories) {
     if (!stories.isArray()) {
       return null;
     }
     StringBuilder out = new StringBuilder();
+    List<StoryExtra> extras = new ArrayList<>();
+    int written = 0;
     for (JsonNode story : stories) {
       String paragraph = paragraph(story);
       if (paragraph == null) {
@@ -105,8 +112,10 @@ public final class NewsFileParser {
       }
       if (!out.isEmpty()) out.append("\n\n");
       out.append(paragraph);
+      StoryExtras.of(written, NewsText.clean(text(story, "title")), story).ifPresent(extras::add);
+      written++;
     }
-    return out.isEmpty() ? null : out.toString();
+    return out.isEmpty() ? null : new Written(out.toString(), extras);
   }
 
   /** {@code **Title**: text [Source](url) · HH:mm dd/MM}; the title, link and time are left out when missing. */

@@ -36,7 +36,7 @@ class NewsFileParserTest {
     List<NewsDraft> drafts = NewsFileParser.parse(sample(), TODAY, PRESETS);
 
     assertThat(drafts).extracting(NewsDraft::headline).containsExactly(
-        "🏠 Tin trong nước", "🌍 Tin thế giới", "📈 Tin chứng khoán (phiên gần nhất 20/10)", "🔬 Tin khoa học & công nghệ");
+        "Tin trong nước", "Tin thế giới", "Tin chứng khoán (phiên gần nhất 20/10)", "Tin khoa học & công nghệ");
     assertThat(drafts).allSatisfy(d -> {
       assertThat(d.summary().length()).isBetween(1, 8000);
       assertThat(d.newsDate()).isEqualTo(LocalDate.of(2026, 10, 20));
@@ -83,7 +83,7 @@ class NewsFileParserTest {
 
     List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY, lookup);
 
-    assertThat(drafts).extracting(NewsDraft::headline).containsExactly("🩺 Tin sức khỏe", "📰 Tin sports");
+    assertThat(drafts).extracting(NewsDraft::headline).containsExactly("Tin sức khỏe", "Tin sports");
     assertThat(drafts).extracting(NewsDraft::category).containsExactly("HEALTH", "OTHER");
     assertThat(asked).containsExactly("HEALTH", "SPORTS");
   }
@@ -114,7 +114,7 @@ class NewsFileParserTest {
 
     assertThat(d.summary().split("\n\n")).hasSize(3);
     assertThat(d.summary().length()).isLessThanOrEqualTo(8000);
-    assertThat(d.headline()).hasSize(120).startsWith("📰 Tin nnnn");
+    assertThat(d.headline()).hasSize(120).startsWith("Tin nnnn");
   }
 
   @Test
@@ -124,7 +124,7 @@ class NewsFileParserTest {
 
     List<NewsDraft> drafts = NewsFileParser.parse(json, TODAY, PRESETS);
 
-    assertThat(drafts).extracting(NewsDraft::headline).containsExactly("📰 Tin health news", "📈 Tin chứng khoán (phiên gần nhất 01/01)");
+    assertThat(drafts).extracting(NewsDraft::headline).containsExactly("Tin health news", "Tin chứng khoán (phiên gần nhất 01/01)");
     assertThat(drafts).extracting(NewsDraft::newsDate).containsOnly(TODAY);
     assertThat(NewsFileParser.parse("{}", TODAY, PRESETS)).isEmpty();
   }
@@ -135,7 +135,7 @@ class NewsFileParserTest {
 
     NewsDraft d = NewsFileParser.parse(json, TODAY, PRESETS).get(0);
 
-    assertThat(d.headline()).isEqualTo("📈 Tin chứng khoán (phiên gần nhất 20/10)");
+    assertThat(d.headline()).isEqualTo("Tin chứng khoán (phiên gần nhất 20/10)");
     assertThat(d.newsDate()).isEqualTo(LocalDate.of(2026, 10, 21));
   }
 
@@ -217,5 +217,46 @@ class NewsFileParserTest {
     assertThat(drafts).isNotEmpty().allSatisfy(d -> assertThat(d.summary().length()).isBetween(1, 8000));
     String all = String.join("\n\n", drafts.stream().map(NewsDraft::summary).toList());
     assertThat(all).contains(" · 15:47 20/10").contains(" · 00:05 21/10").contains(" · 22:20 20/10").contains(" · 06:11 21/10");
+  }
+
+  @Test
+  void eachStoryWithExtrasGetsAnEntryAtItsPosition() {
+    String json = "{\"sections\":{\"d\":["
+        + "{\"title\":\"A\",\"summary\":\"s\",\"key_points\":[\"k1\",\"k2\"],\"analysis\":\"an\"},"
+        + "{\"title\":\"B\",\"summary\":\"s\"},"
+        + "{\"title\":\"C\",\"summary\":\"s\",\"key_points\":\"x\\ny\",\"analysis\":7}]}}";
+    List<StoryExtra> extras = NewsFileParser.parse(json, TODAY, PRESETS).get(0).extras();
+    assertThat(extras).containsExactly(
+        new StoryExtra(0, "A", List.of("k1", "k2"), "an"), new StoryExtra(2, "C", List.of("x", "y"), null));
+  }
+
+  @Test
+  void aStoryWithoutTextIsNotWritten_soItsExtrasAreSkippedAndLaterIndicesShift() {
+    String json = "{\"sections\":{\"d\":["
+        + "{\"title\":\"A\",\"summary\":\"s\",\"analysis\":\"a0\"},"
+        + "{\"title\":\"Gone\",\"key_points\":[\"never\"]},"
+        + "{\"title\":\"C\",\"summary\":\"s\",\"analysis\":\"a1\"}]}}";
+    assertThat(NewsFileParser.parse(json, TODAY, PRESETS).get(0).extras())
+        .extracting(StoryExtra::index, StoryExtra::title).containsExactly(
+            org.assertj.core.groups.Tuple.tuple(0, "A"), org.assertj.core.groups.Tuple.tuple(1, "C"));
+  }
+
+  @Test
+  void aStoryLeftOutByTheBudgetHasNoExtraAndTheIndexMatchesTheParagraphOrder() {
+    String big = "b".repeat(5000);
+    String json = "{\"sections\":{\"d\":["
+        + "{\"title\":\"A\",\"summary\":\"s\",\"analysis\":\"a0\"},"
+        + "{\"title\":\"Big\",\"summary\":\"" + big + "\",\"analysis\":\"a1\"},"
+        + "{\"title\":\"Big2\",\"summary\":\"" + big + "\",\"analysis\":\"dropped\"}]}}";
+    NewsDraft draft = NewsFileParser.parse(json, TODAY, PRESETS).get(0);
+    String[] paragraphs = draft.summary().split("\n\n");
+    assertThat(paragraphs).hasSize(2);
+    assertThat(draft.extras()).extracting(StoryExtra::index).containsExactly(0, 1);
+    assertThat(paragraphs[1]).startsWith("**" + draft.extras().get(1).title() + "**");
+  }
+
+  @Test
+  void aSectionWithoutKeyPointsOrAnalysisHasNoExtras() throws IOException {
+    assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS)).allSatisfy(d -> assertThat(d.extras()).isEmpty());
   }
 }
