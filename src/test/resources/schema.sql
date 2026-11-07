@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS news_collection_run (
     country_code  VARCHAR(2) NOT NULL,
     category_code VARCHAR(20) NOT NULL,
     stories       INT NOT NULL DEFAULT 0,
-    stored        INT NOT NULL DEFAULT 0,
+    stored_count  INT NOT NULL DEFAULT 0,
     rejected      INT NOT NULL DEFAULT 0,
     failed        BOOLEAN NOT NULL DEFAULT FALSE,
     error         VARCHAR(120) NULL,

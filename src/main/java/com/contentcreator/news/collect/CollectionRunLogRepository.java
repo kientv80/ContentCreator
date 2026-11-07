@@ -45,7 +45,7 @@ public class CollectionRunLogRepository {
   public void insert(Run run) {
     String error = run.error() == null || run.error().length() <= MAX_ERROR ? run.error() : run.error().substring(0, MAX_ERROR);
     jdbc.update(
-        "INSERT INTO news_collection_run (started_at, country_code, category_code, stories, stored, rejected, failed, error, duration_ms) "
+        "INSERT INTO news_collection_run (started_at, country_code, category_code, stories, stored_count, rejected, failed, error, duration_ms) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         Timestamp.from(run.startedAt()), run.country(), run.category(), run.stories(), run.stored(), run.rejected(), run.failed(), error,
         run.durationMs());

@@ -34,7 +34,7 @@ class CollectionRunLogRepositoryTest {
     assertThat(row.get("COUNTRY_CODE")).isEqualTo("US");
     assertThat(row.get("CATEGORY_CODE")).isEqualTo("HEALTH");
     assertThat(row.get("STORIES")).isEqualTo(5);
-    assertThat(row.get("STORED")).isEqualTo(3);
+    assertThat(row.get("STORED_COUNT")).isEqualTo(3);
     assertThat(row.get("REJECTED")).isEqualTo(2);
     assertThat(row.get("FAILED")).isEqualTo(false);
     assertThat(row.get("ERROR")).isNull();

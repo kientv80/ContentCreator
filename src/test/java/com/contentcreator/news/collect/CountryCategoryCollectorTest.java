@@ -111,7 +111,7 @@ class CountryCategoryCollectorTest {
     assertThat(run.get("COUNTRY_CODE")).isEqualTo("US");
     assertThat(run.get("CATEGORY_CODE")).isEqualTo("HEALTH");
     assertThat(run.get("STORIES")).isEqualTo(2);
-    assertThat(run.get("STORED")).isEqualTo(2);
+    assertThat(run.get("STORED_COUNT")).isEqualTo(2);
     assertThat(run.get("REJECTED")).isEqualTo(0);
     assertThat(run.get("FAILED")).isEqualTo(false);
     assertThat(run.get("ERROR")).isNull();
