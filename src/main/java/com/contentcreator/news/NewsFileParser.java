@@ -3,6 +3,8 @@ package com.contentcreator.news;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ public final class NewsFileParser {
   static final int MAX_HEADLINE = 120;
   /** The news_summary.summary column limit (ElderEase migration V41). */
   static final int MAX_SUMMARY = 8000;
+  private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("HH:mm dd/MM");
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Map<String, String> HEADINGS = Map.of(
       "domestic", "Tin trong nước",
@@ -36,6 +39,8 @@ public final class NewsFileParser {
   private NewsFileParser() {}
 
   /**
+   * Parses a bulletin file as Vietnamese (the default language).
+   *
    * @param json the file's text
    * @param today the day to use when the file has no valid {@code date}
    * @param categories finds an active category by code; called once per section, empty means OTHER
@@ -43,6 +48,42 @@ public final class NewsFileParser {
    * @throws IllegalArgumentException when the text is not a JSON object
    */
   public static List<NewsDraft> parse(String json, LocalDate today, Function<String, Optional<NewsCategory>> categories) {
+    return parse(json, today, categories, "vi", null);
+  }
+
+  /**
+   * Parses a bulletin written in the given language; the file-style section headings are kept.
+   *
+   * @param json the file's text
+   * @param today the day to use when the file has no valid {@code date}
+   * @param categories finds an active category by code; called once per section, empty means OTHER
+   * @param language {@code en} labels a source without a link "(Source: X)", anything else "(Nguồn: X)"
+   * @return one draft per non-empty section, in file order
+   * @throws IllegalArgumentException when the text is not a JSON object
+   */
+  public static List<NewsDraft> parse(String json, LocalDate today, Function<String, Optional<NewsCategory>> categories, String language) {
+    return parse(json, today, categories, language, null);
+  }
+
+  /**
+   * Parses an AI-collected bulletin: like {@link #parse(String, LocalDate, Function, String)} but each draft's headline is
+   * "{category name in the language} · HH:mm dd/MM", so drafts collected every hour are distinct and reviewable.
+   *
+   * @param json the (already filtered) answer text
+   * @param today the day to use when the answer has no valid {@code date}
+   * @param categories finds an active category by code; called once per section, empty means OTHER
+   * @param language {@code en} uses the English category name and "(Source: X)", anything else Vietnamese
+   * @param stamp the Vietnam local time shown in the headline
+   * @return one draft per non-empty section, in answer order
+   * @throws IllegalArgumentException when the text is not a JSON object
+   */
+  public static List<NewsDraft> parseCollected(
+      String json, LocalDate today, Function<String, Optional<NewsCategory>> categories, String language, LocalDateTime stamp) {
+    return parse(json, today, categories, language, stamp);
+  }
+
+  private static List<NewsDraft> parse(
+      String json, LocalDate today, Function<String, Optional<NewsCategory>> categories, String language, LocalDateTime stamp) {
     JsonNode root;
     try {
       root = MAPPER.readTree(json);
@@ -58,13 +99,16 @@ public final class NewsFileParser {
     sections.fieldNames().forEachRemaining(name -> {
       JsonNode section = sections.get(name);
       JsonNode stories = section.isArray() ? section : section.path("items");
-      Written written = summary(stories);
+      Written written = summary(stories, language);
       if (written != null) {
         String sessionDay = section.path("session_date").asText("");
         LocalDate shown = "stocks".equals(name) ? day(sessionDay, day) : day;
         Optional<NewsCategory> category = categories.apply(code(name));
         String code = category.map(NewsCategory::code).orElse(NewsDraft.OTHER);
-        drafts.add(new NewsDraft(cut(heading(name, shown, category.orElse(null)), MAX_HEADLINE), written.text(), day, code, written.extras()));
+        String headline = stamp == null
+            ? heading(name, shown, category.orElse(null))
+            : collectedHeadline(name, category.orElse(null), language, stamp);
+        drafts.add(new NewsDraft(cut(headline, MAX_HEADLINE), written.text(), day, code, written.extras()));
       }
     });
     return drafts;
@@ -90,11 +134,17 @@ public final class NewsFileParser {
     return "stocks".equals(name) ? base + String.format(" (phiên gần nhất %02d/%02d)", shown.getDayOfMonth(), shown.getMonthValue()) : base;
   }
 
+  /** "{category name in the language} · HH:mm dd/MM"; the category name falls back to the section name when the category is unknown. */
+  private static String collectedHeadline(String name, NewsCategory category, String language, LocalDateTime stamp) {
+    String categoryName = category == null ? name.replace('_', ' ') : "en".equals(language) ? category.nameEn() : category.nameVi();
+    return categoryName + " · " + STAMP.format(stamp);
+  }
+
   /** The summary text and the extras of the stories written into it (indexed by paragraph position). */
   private record Written(String text, List<StoryExtra> extras) {}
 
   /** One paragraph per usable story, as many as fit the column; {@code null} when there is none. */
-  private static Written summary(JsonNode stories) {
+  private static Written summary(JsonNode stories, String language) {
     if (!stories.isArray()) {
       return null;
     }
@@ -102,7 +152,7 @@ public final class NewsFileParser {
     List<StoryExtra> extras = new ArrayList<>();
     int written = 0;
     for (JsonNode story : stories) {
-      String paragraph = paragraph(story);
+      String paragraph = paragraph(story, language);
       if (paragraph == null) {
         continue;
       }
@@ -119,7 +169,7 @@ public final class NewsFileParser {
   }
 
   /** {@code **Title**: text [Source](url) · HH:mm dd/MM}; the title, link and time are left out when missing. */
-  private static String paragraph(JsonNode story) {
+  private static String paragraph(JsonNode story, String language) {
     String text = NewsText.clean(text(story, "summary"));
     if (text == null) {
       return null;
@@ -137,7 +187,7 @@ public final class NewsFileParser {
       if (host != null && SafeLinks.labelMatchesHost(source, host)) {
         p.append('[').append(source).append("](").append(url.replace(")", "%29")).append(')');
       } else {
-        p.append("(Nguồn: ").append(source).append(')');
+        p.append("en".equals(language) ? "(Source: " : "(Nguồn: ").append(source).append(')');
       }
     }
     if (!time.isEmpty()) p.append(" · ").append(time);

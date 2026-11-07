@@ -19,11 +19,11 @@ class NewsFileParserTest {
 
   /** The five categories seeded by ElderEase V42. */
   private static final Function<String, Optional<NewsCategory>> PRESETS = code -> Optional.ofNullable(Map.of(
-      "DOMESTIC", new NewsCategory("DOMESTIC", "🏠", "Trong nước"),
-      "WORLD", new NewsCategory("WORLD", "🌍", "Thế giới"),
-      "STOCKS", new NewsCategory("STOCKS", "📈", "Chứng khoán"),
-      "SCIENCE_TECH", new NewsCategory("SCIENCE_TECH", "🔬", "Khoa học & công nghệ"),
-      "OTHER", new NewsCategory("OTHER", "📰", "Khác")).get(code));
+      "DOMESTIC", new NewsCategory("DOMESTIC", "🏠", "Trong nước", "Domestic"),
+      "WORLD", new NewsCategory("WORLD", "🌍", "Thế giới", "World"),
+      "STOCKS", new NewsCategory("STOCKS", "📈", "Chứng khoán", "Stocks"),
+      "SCIENCE_TECH", new NewsCategory("SCIENCE_TECH", "🔬", "Khoa học & công nghệ", "Science & tech"),
+      "OTHER", new NewsCategory("OTHER", "📰", "Khác", "Other")).get(code));
 
   private static String sample() throws IOException {
     try (var in = NewsFileParserTest.class.getResourceAsStream("/bulletin/sample.json")) {
@@ -77,7 +77,7 @@ class NewsFileParserTest {
     List<String> asked = new ArrayList<>();
     Function<String, Optional<NewsCategory>> lookup = code -> {
       asked.add(code);
-      return "HEALTH".equals(code) ? Optional.of(new NewsCategory("HEALTH", "🩺", "Sức Khỏe")) : Optional.empty();
+      return "HEALTH".equals(code) ? Optional.of(new NewsCategory("HEALTH", "🩺", "Sức Khỏe", "Health")) : Optional.empty();
     };
     String json = "{\"sections\":{\"Health\":[{\"summary\":\"a\"},{\"summary\":\"b\"},{\"summary\":\"c\"}],\"sports\":[{\"summary\":\"d\"}]}}";
 
@@ -258,5 +258,44 @@ class NewsFileParserTest {
   @Test
   void aSectionWithoutKeyPointsOrAnalysisHasNoExtras() throws IOException {
     assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS)).allSatisfy(d -> assertThat(d.extras()).isEmpty());
+  }
+
+  @Test
+  void aStoryWithoutALinkIsLabelledSourceForEnglishAndNguonByDefault() {
+    String json = "{\"sections\":{\"domestic\":[{\"title\":\"T\",\"summary\":\"s\",\"source\":\"Example News\"}]}}";
+
+    assertThat(NewsFileParser.parse(json, TODAY, PRESETS, "en").get(0).summary()).isEqualTo("**T**: s (Source: Example News)");
+    assertThat(NewsFileParser.parse(json, TODAY, PRESETS, "vi").get(0).summary()).isEqualTo("**T**: s (Nguồn: Example News)");
+    assertThat(NewsFileParser.parse(json, TODAY, PRESETS).get(0).summary()).isEqualTo("**T**: s (Nguồn: Example News)");
+  }
+
+  @Test
+  void aFileParsedWithALanguageKeepsTheFileHeadings() throws IOException {
+    assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS, "en").get(0).headline()).isEqualTo("Tin trong nước");
+  }
+
+  @Test
+  void parseCollectedHeadsADraftWithTheCategoryNameInTheLanguageAndTheTime() {
+    String json = "{\"sections\":{\"WORLD\":[{\"title\":\"T\",\"summary\":\"s\",\"source\":\"Example News\"}]}}";
+    java.time.LocalDateTime stamp = java.time.LocalDateTime.of(2026, 11, 7, 9, 5);
+
+    NewsDraft en = NewsFileParser.parseCollected(json, TODAY, PRESETS, "en", stamp).get(0);
+    NewsDraft vi = NewsFileParser.parseCollected(json, TODAY, PRESETS, "vi", stamp).get(0);
+
+    assertThat(en.headline()).isEqualTo("World · 09:05 07/11");
+    assertThat(en.summary()).endsWith("(Source: Example News)");
+    assertThat(en.category()).isEqualTo("WORLD");
+    assertThat(vi.headline()).isEqualTo("Thế giới · 09:05 07/11");
+  }
+
+  @Test
+  void parseCollectedFallsBackToTheSectionNameForAnUnknownCategoryAndKeepsHourlyDraftsDistinct() {
+    String json = "{\"sections\":{\"local_sports\":[{\"summary\":\"s\"}]}}";
+
+    String nine = NewsFileParser.parseCollected(json, TODAY, c -> Optional.empty(), "en", java.time.LocalDateTime.of(2026, 11, 7, 9, 0)).get(0).headline();
+    String ten = NewsFileParser.parseCollected(json, TODAY, c -> Optional.empty(), "en", java.time.LocalDateTime.of(2026, 11, 7, 10, 0)).get(0).headline();
+
+    assertThat(nine).isEqualTo("local sports · 09:00 07/11");
+    assertThat(ten).isNotEqualTo(nine);
   }
 }

@@ -15,6 +15,7 @@ contentcreator:
       settle-seconds: 0
       max-bytes: 100000
     worker:
+      provider: claude
       enabled: false
       cron: "0 0 0 1 1 *"
       zone: Asia/Ho_Chi_Minh

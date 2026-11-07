@@ -31,8 +31,8 @@ class CategoryRepositoryTest {
 
     jdbc.update("INSERT INTO news_category (code, emoji, name_en, name_vi, sort_order, active) VALUES ('HEALTH', '🩺', 'Health', 'Sức khỏe', 6, TRUE)");
 
-    assertThat(repository.findActive("HEALTH")).contains(new NewsCategory("HEALTH", "🩺", "Sức khỏe"));
-    assertThat(repository.findActive("WORLD")).contains(new NewsCategory("WORLD", "🌍", "Thế giới"));
+    assertThat(repository.findActive("HEALTH")).contains(new NewsCategory("HEALTH", "🩺", "Sức khỏe", "Health"));
+    assertThat(repository.findActive("WORLD")).contains(new NewsCategory("WORLD", "🌍", "Thế giới", "World"));
   }
 
   @Test

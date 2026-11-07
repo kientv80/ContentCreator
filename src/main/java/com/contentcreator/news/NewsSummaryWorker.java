@@ -16,9 +16,9 @@ import org.springframework.stereotype.Component;
  * inserts the new summaries into ElderEase's news_summary table as unpublished drafts. Nothing reaches elders
  * until an admin reviews and publishes a draft. One run at a time; a failed run is logged and the next one retries.
  */
-/** Only runs for the claude provider (or when none is set, as in tests); the Gemini path has its own worker. */
+/** Only runs for the claude provider; the Gemini path gets its own worker. */
 @Component
-@ConditionalOnProperty(name = "contentcreator.news.worker.provider", havingValue = "claude", matchIfMissing = true)
+@ConditionalOnProperty(name = "contentcreator.news.worker.provider", havingValue = "claude")
 public class NewsSummaryWorker {
 
   private static final Logger log = LoggerFactory.getLogger(NewsSummaryWorker.class);

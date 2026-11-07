@@ -6,5 +6,6 @@ package com.contentcreator.news;
  * @param code the primary key, e.g. {@code HEALTH}
  * @param emoji the emoji shown before the heading
  * @param nameVi the Vietnamese display name, e.g. "Sức khỏe"
+ * @param nameEn the English display name, e.g. "Health"
  */
-public record NewsCategory(String code, String emoji, String nameVi) {}
+public record NewsCategory(String code, String emoji, String nameVi, String nameEn) {}

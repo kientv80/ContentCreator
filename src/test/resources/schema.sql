@@ -61,3 +61,14 @@ CREATE TABLE IF NOT EXISTS news_story_extra (
     created_at  DATETIME(6) NOT NULL,
     PRIMARY KEY (summary_id, story_index)
 );
+
+CREATE TABLE IF NOT EXISTS news_story_source (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    country_code VARCHAR(2) NOT NULL,
+    url_hash     CHAR(64) NOT NULL,
+    url          VARCHAR(2000) NOT NULL,
+    summary_id   CHAR(36) NULL,
+    created_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT fk_news_story_source_summary FOREIGN KEY (summary_id) REFERENCES news_summary (id) ON DELETE SET NULL,
+    CONSTRAINT uq_news_story_source_url UNIQUE (country_code, url_hash)
+);

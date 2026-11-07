@@ -29,8 +29,8 @@ public class CategoryRepository {
   public Optional<NewsCategory> findActive(String code) {
     try {
       List<NewsCategory> found = jdbc.query(
-          "SELECT code, emoji, name_vi FROM news_category WHERE code = ? AND active = TRUE",
-          (rs, i) -> new NewsCategory(rs.getString("code"), rs.getString("emoji"), rs.getString("name_vi")), code);
+          "SELECT code, emoji, name_vi, name_en FROM news_category WHERE code = ? AND active = TRUE",
+          (rs, i) -> new NewsCategory(rs.getString("code"), rs.getString("emoji"), rs.getString("name_vi"), rs.getString("name_en")), code);
       return found.stream().findFirst();
     } catch (DataAccessException e) {
       log.error("news_category_lookup_failed code={} reason={}", code, e.toString());
