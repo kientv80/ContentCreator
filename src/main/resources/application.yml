@@ -21,6 +21,9 @@ contentcreator:
       # A file must be this old (not modified for this long) before it is read, so half-written files are skipped.
       settle-seconds: 5
       max-bytes: 2000000
+    collect:
+      # A story's site must also be one Google Search reported (set false only if grounding returns no publisher domains).
+      require-grounding: ${CONTENTCREATOR_NEWS_REQUIRE_GROUNDING:true}
     worker:
       # The API collector: provider gemini (default, needs GEMINI_API_KEY) or claude (needs ANTHROPIC_API_KEY). Off by default.
       provider: ${CONTENTCREATOR_NEWS_PROVIDER:gemini}
