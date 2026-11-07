@@ -72,3 +72,65 @@ CREATE TABLE IF NOT EXISTS news_story_source (
     CONSTRAINT fk_news_story_source_summary FOREIGN KEY (summary_id) REFERENCES news_summary (id) ON DELETE SET NULL,
     CONSTRAINT uq_news_story_source_url UNIQUE (country_code, url_hash)
 );
+
+-- ElderEase V10 (country) and V62/V63 (AI news collection), only the columns ContentCreator uses.
+CREATE TABLE IF NOT EXISTS country (
+    code             VARCHAR(2) PRIMARY KEY,
+    name             VARCHAR(80) NOT NULL,
+    default_language VARCHAR(8) NOT NULL DEFAULT 'en',
+    enabled          BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS country_news_config (
+    country_code VARCHAR(2) PRIMARY KEY REFERENCES country (code),
+    collect      BOOLEAN NOT NULL DEFAULT FALSE,
+    language     VARCHAR(8) NOT NULL,
+    notes        VARCHAR(1000) NULL,
+    updated_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+);
+
+CREATE TABLE IF NOT EXISTS country_news_category (
+    country_code  VARCHAR(2) NOT NULL REFERENCES country (code),
+    category_code VARCHAR(20) NOT NULL REFERENCES news_category (code),
+    PRIMARY KEY (country_code, category_code)
+);
+
+CREATE TABLE IF NOT EXISTS country_news_site (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    country_code VARCHAR(2) NOT NULL REFERENCES country (code),
+    name         VARCHAR(80) NOT NULL,
+    domain       VARCHAR(120) NOT NULL,
+    sort_order   INT NOT NULL,
+    CONSTRAINT uq_country_news_site_domain UNIQUE (country_code, domain)
+);
+
+CREATE TABLE IF NOT EXISTS news_collection_settings (
+    id                   TINYINT PRIMARY KEY,
+    prompt_template      VARCHAR(4000) NOT NULL,
+    stories_per_category INT NOT NULL DEFAULT 3,
+    calls_per_day        INT NOT NULL DEFAULT 300,
+    updated_at           DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT chk_news_collection_settings_single CHECK (id = 1)
+);
+
+CREATE TABLE IF NOT EXISTS news_collection_run (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    started_at    DATETIME(6) NOT NULL,
+    country_code  VARCHAR(2) NOT NULL,
+    category_code VARCHAR(20) NOT NULL,
+    stories       INT NOT NULL DEFAULT 0,
+    stored        INT NOT NULL DEFAULT 0,
+    rejected      INT NOT NULL DEFAULT 0,
+    failed        BOOLEAN NOT NULL DEFAULT FALSE,
+    error         VARCHAR(120) NULL,
+    duration_ms   INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS news_collection_secret (
+    id         TINYINT PRIMARY KEY,
+    ciphertext VARBINARY(512) NOT NULL,
+    iv         VARBINARY(12) NOT NULL,
+    last4      VARCHAR(4) NOT NULL,
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT chk_news_collection_secret_single CHECK (id = 1)
+);
