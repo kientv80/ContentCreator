@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import org.springframework.web.client.RestClient;
 
 /** Asks Claude, with the web search tool, for today's Vietnamese news summarised in Vietnamese. */
 @Component
+@ConditionalOnProperty(name = "contentcreator.news.worker.provider", havingValue = "claude")
 public class ClaudeNewsCollector implements NewsCollector {
 
   private final ClaudeProperties props;

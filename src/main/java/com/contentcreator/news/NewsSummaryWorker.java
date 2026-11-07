@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Component;
  * inserts the new summaries into ElderEase's news_summary table as unpublished drafts. Nothing reaches elders
  * until an admin reviews and publishes a draft. One run at a time; a failed run is logged and the next one retries.
  */
+/** Only runs for the claude provider (or when none is set, as in tests); the Gemini path has its own worker. */
 @Component
+@ConditionalOnProperty(name = "contentcreator.news.worker.provider", havingValue = "claude", matchIfMissing = true)
 public class NewsSummaryWorker {
 
   private static final Logger log = LoggerFactory.getLogger(NewsSummaryWorker.class);

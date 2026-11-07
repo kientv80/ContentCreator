@@ -22,7 +22,8 @@ contentcreator:
       settle-seconds: 5
       max-bytes: 2000000
     worker:
-      # The Anthropic API collector; needs ANTHROPIC_API_KEY. Off by default.
+      # The API collector: provider gemini (default, needs GEMINI_API_KEY) or claude (needs ANTHROPIC_API_KEY). Off by default.
+      provider: ${CONTENTCREATOR_NEWS_PROVIDER:gemini}
       enabled: ${CONTENTCREATOR_API_WORKER_ENABLED:false}
       # Spring cron (6 fields), Vietnam time: 06:00, 12:00 and 18:00 every day.
       cron: "0 0 6,12,18 * * *"
@@ -40,6 +41,13 @@ contentcreator:
     accounts:
       vi: elderfriend_ai_vn
       en: elderfriend_ai_us
+  gemini:
+    # Never commit the key: set GEMINI_API_KEY in the environment.
+    api-key: ${GEMINI_API_KEY:}
+    base-url: https://generativelanguage.googleapis.com
+    model: ${GEMINI_MODEL:gemini-3.8-flash}
+    max-tokens: 8000
+    timeout-seconds: 180
   claude:
     # Never commit the key: set ANTHROPIC_API_KEY in the environment.
     api-key: ${ANTHROPIC_API_KEY:}
