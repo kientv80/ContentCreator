@@ -2,9 +2,56 @@
 
 Content workers for ElderEase. Spring Boot 3.5, Java 21.
 
-## NewsSummaryWorker (Anthropic API)
+## News collection (Gemini, hourly, per country and category)
 
-**Off by default** (`CONTENTCREATOR_API_WORKER_ENABLED=true` turns it on; needs `ANTHROPIC_API_KEY`). On a schedule (default 06:00, 12:00 and 18:00 Vietnam time) the worker calls the **Anthropic API** (Messages API with
+**Provider switch:** `contentcreator.news.worker.provider` (env `CONTENTCREATOR_NEWS_PROVIDER`) is `gemini` (default) or
+`claude`. `gemini` starts `NewsCollectionWorker`; `claude` starts the `NewsSummaryWorker` described below instead (one of the
+two, never both). The bulletin `NewsFileWorker` is independent of the switch. The API worker is **off by default**:
+`CONTENTCREATOR_API_WORKER_ENABLED=true` turns it on, and `CONTENTCREATOR_RUN_ON_STARTUP=true` also collects once at start-up.
+
+Every hour (cron `0 0 * * * *`, UTC; property `contentcreator.news.collect.cron`, separate from the Claude worker's own
+`contentcreator.news.worker.cron`) the worker reads the admin's settings from the database (nothing is cached), then makes
+**one Gemini call (Google Search grounding) per enabled country and selected category**. Stories pass the filter chain
+(https, allow-listed site, a site Google Search reported, not already collected, title and summary present), the first
+`stories_per_category` are kept, and each draft is stored **unpublished** with its country, language and source URLs. One
+`news_collection_run` row is written per attempted call, and the daily budget (`calls_per_day`, Vietnam day) is the count of
+today's rows, so a restart cannot reset it. One failing call never stops the others; a run that is still going makes the
+next tick skip. Log lines: `news_collect_call`, `news_collect_rejected`, `news_collect_budget_reached`.
+
+**Environment values**
+
+| Value | Meaning |
+|---|---|
+| `GEMINI_API_KEY` | **Fallback** Gemini key, used only when no key is saved on the admin News collection page. |
+| `NEWS_COLLECTION_SECRET_KEY` | Base64 of 32 bytes, the same value as on the ElderEase backend. Decrypts the key saved on the admin page (AES-256-GCM, table `news_collection_secret`). Without it (or when it does not match) the saved key is ignored, `news_collect_key_unreadable` is logged once per run and `GEMINI_API_KEY` is used. |
+| `GEMINI_MODEL` | Optional model name. |
+| `CONTENTCREATOR_NEWS_REQUIRE_GROUNDING` | `true` (default): a story's site must also be one Google Search reported. |
+
+The key is resolved once per run (a change on the admin page applies from the next hour). It is never logged, printed or
+stored in the run log; with no key anywhere the run records `KEY_MISSING` once and stops.
+
+**MySQL grants for the `contentcreator` user** (least privilege; no UPDATE or DELETE anywhere; the tables come from
+ElderEase migrations V62 and V63):
+
+```sql
+GRANT SELECT ON elderfriend.country_news_config TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.country_news_category TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.country_news_site TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.news_collection_settings TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.news_collection_secret TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.country TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.news_category TO 'contentcreator'@'%';
+GRANT SELECT, INSERT ON elderfriend.news_collection_run TO 'contentcreator'@'%';
+GRANT SELECT, INSERT ON elderfriend.news_story_source TO 'contentcreator'@'%';
+```
+
+The existing `news_summary` and `news_story_extra` grants (SELECT, INSERT) stay. `news_collection_run` and `news_story_source` need SELECT as
+well as INSERT: the daily budget counts the run rows and the duplicate check reads the stored URLs. Without the SELECT on `news_collection_secret` the saved key
+cannot be read and the environment key is used.
+
+## NewsSummaryWorker (Anthropic API, provider `claude`)
+
+Active only with `contentcreator.news.worker.provider=claude`. **Off by default** (`CONTENTCREATOR_API_WORKER_ENABLED=true` turns it on; needs `ANTHROPIC_API_KEY`). On a schedule (default 06:00, 12:00 and 18:00 Vietnam time) the worker calls the **Anthropic API** (Messages API with
 the web search tool) to collect today's Vietnamese news and write a short Vietnamese summary of each story. It
 inserts them **directly into ElderEase's existing `news_summary` table** as **unpublished drafts**:
 `published = FALSE`, `country_code = 'VN'`, `language = 'vi'`, no image or audio. Nothing reaches elders until an

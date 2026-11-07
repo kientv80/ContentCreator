@@ -24,11 +24,16 @@ contentcreator:
     collect:
       # A story's site must also be one Google Search reported (set false only if grounding returns no publisher domains).
       require-grounding: ${CONTENTCREATOR_NEWS_REQUIRE_GROUNDING:true}
+      # The Gemini collection worker's own schedule (Spring cron, 6 fields): every hour on the hour, UTC.
+      # The Claude worker keeps its own contentcreator.news.worker.cron below.
+      cron: "0 0 * * * *"
+      zone: UTC
     worker:
-      # The API collector: provider gemini (default, needs GEMINI_API_KEY) or claude (needs ANTHROPIC_API_KEY). Off by default.
+      # The API collector: provider gemini (default: hourly per country and category, key saved on the admin page or GEMINI_API_KEY)
+      # or claude (needs ANTHROPIC_API_KEY). Off by default; run-on-startup is shared by both.
       provider: ${CONTENTCREATOR_NEWS_PROVIDER:gemini}
       enabled: ${CONTENTCREATOR_API_WORKER_ENABLED:false}
-      # Spring cron (6 fields), Vietnam time: 06:00, 12:00 and 18:00 every day.
+      # Claude worker only: Spring cron (6 fields), Vietnam time: 06:00, 12:00 and 18:00 every day.
       cron: "0 0 6,12,18 * * *"
       zone: Asia/Ho_Chi_Minh
       run-on-startup: ${CONTENTCREATOR_RUN_ON_STARTUP:false}
@@ -45,7 +50,8 @@ contentcreator:
       vi: elderfriend_ai_vn
       en: elderfriend_ai_us
   gemini:
-    # Never commit the key: set GEMINI_API_KEY in the environment.
+    # Fallback key, used when no key is saved on the admin page. Never commit it: set GEMINI_API_KEY in the environment.
+    # The saved key is decrypted with NEWS_COLLECTION_SECRET_KEY (base64 of 32 bytes), read straight from the environment.
     api-key: ${GEMINI_API_KEY:}
     base-url: https://generativelanguage.googleapis.com
     model: ${GEMINI_MODEL:gemini-3.8-flash}
