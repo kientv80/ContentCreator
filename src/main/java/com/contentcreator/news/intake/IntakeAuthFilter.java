@@ -67,11 +67,29 @@ public class IntakeAuthFilter extends OncePerRequestFilter {
       return;
     }
     if (!tokenMatches(request.getHeader("Authorization"))) {
-      log.info("news_intake_unauthorized ip={}", ip);
+      log.info("news_intake_unauthorized ip={} reason={}", ip, rejectReason(request.getHeader("Authorization")));
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       return;
     }
     chain.doFilter(request, response);
+  }
+
+  /**
+   * Why a request was refused, for the log only: {@code no_header}, {@code not_bearer}, {@code empty_token} or
+   * {@code wrong_token len=N} (the length of the value sent, never the value itself).
+   *
+   * @param header the Authorization header, may be null
+   * @return a short reason without any part of the token
+   */
+  static String rejectReason(String header) {
+    if (header == null || header.isBlank()) {
+      return "no_header";
+    }
+    if (header.length() < 7 || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+      return "not_bearer";
+    }
+    String token = header.substring(7).trim();
+    return token.isEmpty() ? "empty_token" : "wrong_token len=" + token.length();
   }
 
   /**
