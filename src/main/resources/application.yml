@@ -38,6 +38,14 @@ contentcreator:
       zone: Asia/Ho_Chi_Minh
       run-on-startup: ${CONTENTCREATOR_RUN_ON_STARTUP:false}
       max-items: 10
+    intake:
+      # News intake API (POST /api/v1/news-bulletins). Empty hash = endpoint disabled (404). Set it to the SHA-256 hex of the token,
+      # never the token itself (see README, "News intake API").
+      token-sha256: ${NEWS_INTAKE_TOKEN_SHA256:}
+      # true only behind Caddy: the client address is then the right-most X-Forwarded-For value.
+      trust-proxy: ${NEWS_INTAKE_TRUST_PROXY:false}
+      max-bytes: 2000000
+      per-hour: 30
   thoughts:
     enabled: ${CONTENTCREATOR_THOUGHT_WORKER_ENABLED:true}
     # Letters named yyyy-MM-dd-vi.md / yyyy-MM-dd-en.md become PENDING Shared Thoughts; done files move to processed/,

@@ -71,6 +71,23 @@ public class StoryFilter {
    * @throws IllegalArgumentException when the answer holds no JSON object
    */
   public Result filter(String answer, String country, List<String> allowedDomains, List<String> groundingDomains) {
+    return filter(answer, country, allowedDomains, groundingDomains, false);
+  }
+
+  /**
+   * Same as {@link #filter(String, String, List, List)} but the site allow-list can be switched off: with
+   * {@code skipSiteList} true any plain https, non-Google host passes the host check (used by the intake API for a
+   * country that has no trusted-site list).
+   *
+   * @param answer the model's text: a JSON object, optionally wrapped in a code fence or other text
+   * @param country the two-letter country code
+   * @param allowedDomains the country's allow-listed site domains (ignored when {@code skipSiteList})
+   * @param groundingDomains the publisher domains Google Search reported (lower-case)
+   * @param skipSiteList true to skip the allow-list rule
+   * @return the filtered JSON, the kept URLs and the reject counts
+   * @throws IllegalArgumentException when the answer holds no JSON object
+   */
+  public Result filter(String answer, String country, List<String> allowedDomains, List<String> groundingDomains, boolean skipSiteList) {
     JsonNode parsed = parseObject(answer);
     ObjectNode root = (ObjectNode) parsed;
     Set<String> grounded = new HashSet<>();
@@ -93,7 +110,7 @@ public class StoryFilter {
         if (!stories.isArray()) continue;
         ArrayNode keptStories = MAPPER.createArrayNode();
         for (JsonNode story : stories) {
-          Reason reason = check(story, country, allowed, grounded, inAnswer);
+          Reason reason = check(story, country, skipSiteList ? null : allowed, grounded, inAnswer);
           if (reason == null) {
             String url = story.get("url").asText();
             kept.add(new StoryUrl(hash(normalize(url)), url));
@@ -113,11 +130,11 @@ public class StoryFilter {
     return new Result(root.toString(), List.copyOf(kept), rejected);
   }
 
-  /** Runs the chain on one story; {@code null} means it passed. A passing story's hash is remembered for this answer. */
+  /** Runs the chain on one story ({@code allowed} null = no site list); {@code null} means it passed. A passing story's hash is remembered for this answer. */
   private Reason check(JsonNode story, String country, List<String> allowed, Set<String> grounded, Set<String> inAnswer) {
     String url = story.isObject() && story.path("url").isTextual() ? story.get("url").asText() : null;
     String host = host(url);
-    if (host == null || isGoogle(host) || !onAllowList(host, allowed)) {
+    if (host == null || isGoogle(host) || (allowed != null && !onAllowList(host, allowed))) {
       return Reason.HOST;
     }
     if (requireGrounding && !grounded.contains(registrableDomain(host))) {

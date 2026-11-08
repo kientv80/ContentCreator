@@ -111,4 +111,24 @@ class CollectionConfigRepositoryTest {
     assertThat(us.categories()).isEmpty();
     assertThat(us.sites()).isEmpty();
   }
+
+  @Test
+  void countryExists_isTrueForAnyCountryRow_evenWithCollectionOff() {
+    country("FR", "France", false, "fr", null);
+
+    assertThat(repository.countryExists("FR")).isTrue();
+    assertThat(repository.countryExists("ZZ")).isFalse();
+  }
+
+  @Test
+  void siteDomains_returnsOneCountrysDomainsInTheAdminsOrder() {
+    country("US", "United States", false, "en", null);
+    country("FR", "France", false, "fr", null);
+    jdbc.update("INSERT INTO country_news_site (country_code, name, domain, sort_order) VALUES ('US', 'B', 'b.test', 2)");
+    jdbc.update("INSERT INTO country_news_site (country_code, name, domain, sort_order) VALUES ('US', 'A', 'a.test', 1)");
+    jdbc.update("INSERT INTO country_news_site (country_code, name, domain, sort_order) VALUES ('FR', 'F', 'f.test', 1)");
+
+    assertThat(repository.siteDomains("US")).containsExactly("a.test", "b.test");
+    assertThat(repository.siteDomains("ZZ")).isEmpty();
+  }
 }

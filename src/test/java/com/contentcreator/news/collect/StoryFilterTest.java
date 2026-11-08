@@ -274,4 +274,15 @@ class StoryFilterTest {
     assertThat(new CollectProperties(true).requireGrounding()).isTrue();
     assertThat(new CollectProperties(false).requireGrounding()).isFalse();
   }
+
+  @Test
+  void filterWithSkipSiteListKeepsAnyHttpsHostButStillRejectsGoogleAndHttp() {
+    String a = answer(story("https://other.test/a", "T", "S"), story("https://www.google.com/url?q=x", "T", "S"), story("http://other.test/b", "T", "S"));
+
+    Result r = new StoryFilter(checker, false).filter(a, "TL", List.of(), List.of(), true);
+
+    assertThat(r.kept()).extracting(StoryUrl::url).containsExactly("https://other.test/a");
+    assertThat(rejected(r, Reason.HOST)).isEqualTo(2);
+    assertThat(new StoryFilter(checker, false).filter(a, "TL", List.of(), List.of()).kept()).isEmpty();
+  }
 }

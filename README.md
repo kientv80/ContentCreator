@@ -49,6 +49,64 @@ The existing `news_summary` and `news_story_extra` grants (SELECT, INSERT) stay.
 well as INSERT: the daily budget counts the run rows and the duplicate check reads the stored URLs. Without the SELECT on `news_collection_secret` the saved key
 cannot be read and the environment key is used.
 
+## News intake API (the scheduled Claude task posts the daily bulletin)
+
+`POST /api/v1/news-bulletins` turns a posted bulletin into **unpublished** drafts (the admin still reviews and publishes). It
+exists only when `NEWS_INTAKE_TOKEN_SHA256` is set; with it empty the route does not exist and the answer is `404`. The file
+worker, the thought worker and the collection workers are unaffected.
+
+**Request** (`Authorization: Bearer <token>`, `Content-Type: application/json`, body at most 2 MB):
+
+```json
+{"country": "VN", "language": "vi", "date": "2026-11-08",
+ "sections": {"domestic": [{"title": "...", "summary": "...", "key_points": ["..."], "analysis": "...", "source": "...", "url": "https://..."}]}}
+```
+
+`country` (2 letters, default `VN`, must exist in the `country` table) and `language` (2 letters, default `vi`) are optional.
+Each section becomes one draft. A story link must be `https`, not a Google redirect, and, when the country has a trusted-site
+list, on that list; a link already stored for the country is skipped.
+
+| Answer | Meaning |
+|---|---|
+| `201 {"received":3,"stored":2,"skipped":1,"rejected":[{"reason":"host","count":1}]}` | Drafts saved. `received` = stories in the body, `stored` + `skipped` = `received`; reasons are `host`, `duplicate`, `empty`. |
+| `200` (same shape, `stored: 0`) | The same bulletin was already stored: nothing new. Retries are safe. |
+| `400 {"error":"unknown_country","message":"Unknown country."}` | Also `invalid_body` (not a JSON object) and `invalid_language`. |
+| `401` (empty body) | Missing or wrong token. |
+| `404` | The intake is not configured. |
+| `413` | Body over 2 MB. |
+| `422 {"error":"no_valid_story"}` | Nothing in the body could be stored. |
+| `429` + `Retry-After` | More than 30 requests in an hour from one client address (failed attempts count). |
+
+**Settings.** `NEWS_INTAKE_TOKEN_SHA256` (64 hex characters, empty = disabled) and `NEWS_INTAKE_TRUST_PROXY`
+(`true` only behind Caddy: the client address is then the right-most `X-Forwarded-For` value; default `false` uses the
+connection address). Log lines: `news_intake_received`, `news_intake_stored`, `news_intake_rejected reason=...`,
+`news_intake_unauthorized ip=...`. The token and its hash are never logged.
+
+**Make a token and its hash without printing the token.** The token goes to the Claude task, ContentCreator keeps only the hash:
+
+```bash
+openssl rand -hex 32 | tee >(sha256sum | cut -d' ' -f1 > hash.txt) > token.txt
+```
+
+`tee` sends the random token to `token.txt` and, at the same time, its SHA-256 to `hash.txt`; nothing is printed to the
+terminal or any shared log (do not `cat` the files in a recorded session). Put the content of `hash.txt` in
+`NEWS_INTAKE_TOKEN_SHA256` of the server, store `token.txt` as a **network secret** (type Bearer, allowed website = the
+intake address) in the Claude cloud environment of the scheduled task, not in its prompt, and allow that domain in the
+environment's network access. Then delete both local files. Rotate by making a new pair and deploying the new hash.
+Test with **Run now** on the scheduled task and check the run log for a leaked token; retries can send a bulletin twice, which
+is safe.
+
+**MySQL grants** (least privilege; the tables come from ElderEase migrations V10, V40, V46 and V62):
+
+```sql
+GRANT SELECT, INSERT ON elderfriend.news_summary TO 'contentcreator'@'%';
+GRANT SELECT, INSERT ON elderfriend.news_story_extra TO 'contentcreator'@'%';
+GRANT SELECT, INSERT ON elderfriend.news_story_source TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.news_category TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.country TO 'contentcreator'@'%';
+GRANT SELECT ON elderfriend.country_news_site TO 'contentcreator'@'%';
+```
+
 ## NewsSummaryWorker (Anthropic API, provider `claude`)
 
 Active only with `contentcreator.news.worker.provider=claude`. **Off by default** (`CONTENTCREATOR_API_WORKER_ENABLED=true` turns it on; needs `ANTHROPIC_API_KEY`). On a schedule (default 06:00, 12:00 and 18:00 Vietnam time) the worker calls the **Anthropic API** (Messages API with

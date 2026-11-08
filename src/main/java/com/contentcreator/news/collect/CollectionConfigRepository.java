@@ -69,4 +69,25 @@ public class CollectionConfigRepository {
             categories.getOrDefault(h.code(), List.of()), sites.getOrDefault(h.code(), List.of())))
         .toList();
   }
+
+  /**
+   * Whether the country table has the code (any country, not only those with collection switched on).
+   *
+   * @param code the two-letter country code
+   * @return true when a row exists
+   */
+  public boolean countryExists(String code) {
+    Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM country WHERE code = ?", Integer.class, code);
+    return count != null && count > 0;
+  }
+
+  /**
+   * The trusted website domains of one country in the admin's order.
+   *
+   * @param code the two-letter country code
+   * @return the domains, empty when the country has no list
+   */
+  public List<String> siteDomains(String code) {
+    return jdbc.queryForList("SELECT domain FROM country_news_site WHERE country_code = ? ORDER BY sort_order, id", String.class, code);
+  }
 }
