@@ -7,7 +7,8 @@ import com.contentcreator.news.NewsFileParser;
 import com.contentcreator.news.StoryUrl;
 import com.contentcreator.news.collect.CollectionConfigRepository;
 import com.contentcreator.news.collect.StoryFilter;
-import com.contentcreator.news.collect.UrlSeenChecker;
+import com.contentcreator.news.collect.CollectProperties;
+import com.contentcreator.news.collect.SeenChecker;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,15 +64,17 @@ public class NewsIntakeService {
    * @param config country and trusted-site lookups
    * @param categories the category lookup for the parser
    * @param drafts the draft store
-   * @param seen the stored-URL check (the filter's duplicate rule)
+   * @param seen the stored-URL and stored-title check (the filter's duplicate rule)
+   * @param props the collection switches (title window)
    * @param clock the time source
    */
   public NewsIntakeService(
-      CollectionConfigRepository config, CategoryRepository categories, NewsDraftRepository drafts, UrlSeenChecker seen, Clock clock) {
+      CollectionConfigRepository config, CategoryRepository categories, NewsDraftRepository drafts, SeenChecker seen,
+      CollectProperties props, Clock clock) {
     this.config = config;
     this.categories = categories;
     this.drafts = drafts;
-    this.filter = new StoryFilter(seen, false);
+    this.filter = new StoryFilter(seen, false, props.titleDedupeDays(), clock);
     this.clock = clock;
   }
 

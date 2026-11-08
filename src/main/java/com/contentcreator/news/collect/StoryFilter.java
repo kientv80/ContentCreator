@@ -1,5 +1,6 @@
 package com.contentcreator.news.collect;
 
+import com.contentcreator.news.StoryTitle;
 import com.contentcreator.news.StoryUrl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,9 +8,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -24,7 +25,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Filters the stories in the model's JSON answer before {@code NewsFileParser} sees them. Each story passes a chain
  * of independent checks and is dropped with the first reason that fails: {@code host} (not https, a Google or
- * redirect host, not an allow-listed site, or not a site Google Search reported), {@code duplicate} (URL already
+ * redirect host, not an allow-listed site, or not a site Google Search reported), {@code duplicate} (URL or title already
  * collected for the country, or repeated in this answer), {@code empty} (no title or no summary).
  * It never fetches any URL.
  */
@@ -48,16 +49,22 @@ public class StoryFilter {
   /** Second-level labels that sit under a two-letter country suffix, as in co.uk or com.vn. */
   private static final Set<String> SECOND_LEVEL = Set.of("co", "com", "net", "org", "gov", "edu", "ac");
 
-  private final UrlSeenChecker seen;
+  private final SeenChecker seen;
   private final boolean requireGrounding;
+  private final Duration titleWindow;
+  private final Clock clock;
 
   /**
-   * @param seen finds URLs already collected for a country
+   * @param seen finds URLs and titles already collected for a country
    * @param requireGrounding whether the grounding-domain check applies
+   * @param titleDedupeDays how many days back the same title counts as a duplicate
+   * @param clock the time source for the title window
    */
-  public StoryFilter(UrlSeenChecker seen, boolean requireGrounding) {
+  public StoryFilter(SeenChecker seen, boolean requireGrounding, int titleDedupeDays, Clock clock) {
     this.seen = seen;
     this.requireGrounding = requireGrounding;
+    this.titleWindow = Duration.ofDays(titleDedupeDays);
+    this.clock = clock;
   }
 
   /**
@@ -97,6 +104,7 @@ public class StoryFilter {
     }
     List<String> allowed = allowedDomains.stream().map(StoryFilter::normalizeDomain).filter(d -> d != null).toList();
     Set<String> inAnswer = new HashSet<>();
+    Set<String> titlesInAnswer = new HashSet<>();
     List<StoryUrl> kept = new ArrayList<>();
     Map<Reason, Integer> rejected = new EnumMap<>(Reason.class);
     for (Reason r : Reason.values()) rejected.put(r, 0);
@@ -110,10 +118,10 @@ public class StoryFilter {
         if (!stories.isArray()) continue;
         ArrayNode keptStories = MAPPER.createArrayNode();
         for (JsonNode story : stories) {
-          Reason reason = check(story, country, skipSiteList ? null : allowed, grounded, inAnswer);
+          Reason reason = check(story, country, skipSiteList ? null : allowed, grounded, inAnswer, titlesInAnswer);
           if (reason == null) {
             String url = story.get("url").asText();
-            kept.add(new StoryUrl(hash(normalize(url)), url));
+            kept.add(new StoryUrl(hash(normalize(url)), url, StoryTitle.hash(story.get("title").asText())));
             keptStories.add(story);
           } else {
             rejected.merge(reason, 1, Integer::sum);
@@ -130,8 +138,8 @@ public class StoryFilter {
     return new Result(root.toString(), List.copyOf(kept), rejected);
   }
 
-  /** Runs the chain on one story ({@code allowed} null = no site list); {@code null} means it passed. A passing story's hash is remembered for this answer. */
-  private Reason check(JsonNode story, String country, List<String> allowed, Set<String> grounded, Set<String> inAnswer) {
+  /** Runs the chain on one story ({@code allowed} null = no site list); {@code null} means it passed. A passing story's URL and title hashes are remembered for this answer. */
+  private Reason check(JsonNode story, String country, List<String> allowed, Set<String> grounded, Set<String> inAnswer, Set<String> titlesInAnswer) {
     String url = story.isObject() && story.path("url").isTextual() ? story.get("url").asText() : null;
     String host = host(url);
     if (host == null || isGoogle(host) || (allowed != null && !onAllowList(host, allowed))) {
@@ -141,13 +149,18 @@ public class StoryFilter {
       return Reason.HOST;
     }
     String hash = hash(normalize(url));
-    if (inAnswer.contains(hash) || seen.seen(country, hash)) {
+    if (inAnswer.contains(hash) || seen.seenUrl(country, hash)) {
       return Reason.DUPLICATE;
     }
     if (blank(story, "title") || blank(story, "summary")) {
       return Reason.EMPTY;
     }
+    String titleHash = StoryTitle.hash(story.get("title").asText());
+    if (titleHash != null && (titlesInAnswer.contains(titleHash) || seen.seenTitle(country, titleHash, clock.instant().minus(titleWindow)))) {
+      return Reason.DUPLICATE;
+    }
     inAnswer.add(hash);
+    if (titleHash != null) titlesInAnswer.add(titleHash);
     return null;
   }
 
@@ -233,32 +246,22 @@ public class StoryFilter {
   }
 
   /**
-   * Normalizes a URL for duplicate detection: https, lower-case host, no port, no fragment, no trailing slash, query kept.
+   * Normalizes a URL for duplicate detection; see {@link StoryUrl#normalize(String)}.
    *
    * @param url an acceptable https URL (see {@link #host(String)})
    * @return the normalized form
    */
   static String normalize(String url) {
-    URI uri = URI.create(url.trim());
-    String path = uri.getRawPath() == null ? "" : uri.getRawPath();
-    while (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-    return "https://" + host(url) + path + (uri.getRawQuery() == null ? "" : "?" + uri.getRawQuery());
+    return StoryUrl.normalize(url);
   }
 
   /**
-   * SHA-256 of a text as 64 lower-case hex characters.
+   * SHA-256 of a text as 64 lower-case hex characters; see {@link StoryUrl#hash(String)}.
    *
    * @param text the text, normally a normalized URL
    * @return the hex digest
    */
   static String hash(String text) {
-    try {
-      byte[] digest = MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8));
-      StringBuilder hex = new StringBuilder();
-      for (byte b : digest) hex.append(String.format("%02x", b));
-      return hex.toString();
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("SHA-256 unavailable", e); // every JVM ships SHA-256
-    }
+    return StoryUrl.hash(text);
   }
 }

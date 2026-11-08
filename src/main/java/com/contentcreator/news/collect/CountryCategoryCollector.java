@@ -52,7 +52,7 @@ public class CountryCategoryCollector {
   private final GeminiClient gemini;
   private final CollectionRunLogRepository runLog;
   private final NewsDraftRepository drafts;
-  private final UrlSeenChecker seen;
+  private final SeenChecker seen;
   private final CollectProperties props;
   private final Clock clock;
 
@@ -60,12 +60,12 @@ public class CountryCategoryCollector {
    * @param gemini the Gemini client
    * @param runLog the run log (budget count and run rows)
    * @param drafts stores the drafts, extras and source URLs
-   * @param seen finds URLs already collected for the country
-   * @param props the collection switches (grounding)
+   * @param seen finds URLs and titles already collected for the country
+   * @param props the collection switches (grounding, title window)
    * @param clock the time source
    */
   public CountryCategoryCollector(
-      GeminiClient gemini, CollectionRunLogRepository runLog, NewsDraftRepository drafts, UrlSeenChecker seen, CollectProperties props, Clock clock) {
+      GeminiClient gemini, CollectionRunLogRepository runLog, NewsDraftRepository drafts, SeenChecker seen, CollectProperties props, Clock clock) {
     this.gemini = gemini;
     this.runLog = runLog;
     this.drafts = drafts;
@@ -137,7 +137,7 @@ public class CountryCategoryCollector {
    * extra sections is not given a second set of URL rows).
    */
   private void process(GeminiResult result, CountryConfig country, NewsCategory category, CollectionSettings settings, Instant now, Tally tally) {
-    StoryFilter filter = new StoryFilter(seen, props.requireGrounding());
+    StoryFilter filter = new StoryFilter(seen, props.requireGrounding(), props.titleDedupeDays(), clock);
     StoryFilter.Result filtered = filter.filter(
         result.text(), country.code(), country.sites().stream().map(PromptBuilder.Site::domain).toList(), result.groundingDomains());
     int dropped = filtered.rejected().values().stream().mapToInt(Integer::intValue).sum();

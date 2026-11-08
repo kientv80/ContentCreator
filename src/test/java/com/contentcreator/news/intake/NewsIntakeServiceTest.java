@@ -149,4 +149,53 @@ class NewsIntakeServiceTest {
     assertThat(jdbc.queryForMap("SELECT country_code, language FROM news_summary"))
         .containsEntry("COUNTRY_CODE", "VN").containsEntry("LANGUAGE", "vi");
   }
+
+  @Test
+  void process_ac435_theSameArticleWithAndWithoutTrackingParametersIsStoredOnce() throws Exception {
+    IntakeTestData.country(jdbc, "VN");
+    run(bulletin("", story("A", "https://one.test/a?id=1")));
+
+    NewsIntakeService.Result r = run(bulletin("", story("B", "https://one.test/a?utm_source=x&id=1&gclid=q")));
+
+    assertThat(r.stored()).isZero();
+    assertThat(r.rejected()).containsExactly(new NewsIntakeService.Rejected("duplicate", 1));
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_story_source", Integer.class)).isEqualTo(1);
+  }
+
+  @Test
+  void process_ac435_theSameTitleInOtherCaseOrAccentsWithinSevenDaysIsStoredOnce() throws Exception {
+    IntakeTestData.country(jdbc, "VN");
+    run(bulletin("", story("Giá vàng hôm nay", "https://one.test/a")));
+    jdbc.update("UPDATE news_story_source SET created_at = DATEADD('DAY', -3, CURRENT_TIMESTAMP)");
+
+    NewsIntakeService.Result r = run(bulletin("", story("GIA VANG HOM NAY!", "https://two.test/b")));
+
+    assertThat(r.stored()).isZero();
+    assertThat(r.rejected()).containsExactly(new NewsIntakeService.Rejected("duplicate", 1));
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_story_source", Integer.class)).isEqualTo(1);
+  }
+
+  @Test
+  void process_ac435_theSameTitleEightDaysLaterIsStoredAgain() throws Exception {
+    IntakeTestData.country(jdbc, "VN");
+    run(bulletin("", story("Giá vàng hôm nay", "https://one.test/a")));
+    jdbc.update("UPDATE news_story_source SET created_at = DATEADD('DAY', -8, CURRENT_TIMESTAMP)");
+
+    NewsIntakeService.Result r = run(bulletin("", story("Giá vàng hôm nay", "https://two.test/b")));
+
+    assertThat(r.stored()).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_story_source", Integer.class)).isEqualTo(2);
+  }
+
+  @Test
+  void process_ac435_theSameTitleForAnotherCountryIsStored() throws Exception {
+    IntakeTestData.country(jdbc, "VN");
+    IntakeTestData.country(jdbc, "US");
+    run(bulletin("", story("Same headline", "https://one.test/a")));
+
+    NewsIntakeService.Result r = run(bulletin("\"country\":\"US\",", story("Same headline", "https://one.test/b")));
+
+    assertThat(r.stored()).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_story_source", Integer.class)).isEqualTo(2);
+  }
 }

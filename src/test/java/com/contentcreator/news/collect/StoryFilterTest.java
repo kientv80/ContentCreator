@@ -6,11 +6,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.contentcreator.news.StoryTitle;
 import com.contentcreator.news.StoryUrl;
 import com.contentcreator.news.collect.StoryFilter.Reason;
 import com.contentcreator.news.collect.StoryFilter.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +28,23 @@ class StoryFilterTest {
   private static final List<String> GROUNDED = List.of("example.test", "news.sample.co.uk");
 
   private final Set<String> alreadyStored = new HashSet<>();
-  private final UrlSeenChecker checker = (country, hash) -> "TL".equals(country) && alreadyStored.contains(hash);
+  private static final Instant NOW = Instant.parse("2026-11-08T10:00:00Z");
+  private static final Clock CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
+
+  /** Titles already stored, with the instant each was stored; keyed by "country|titleHash". */
+  private final java.util.Map<String, Instant> titlesStored = new java.util.HashMap<>();
+  private final SeenChecker checker = new SeenChecker() {
+    @Override
+    public boolean seenUrl(String country, String hash) {
+      return "TL".equals(country) && alreadyStored.contains(hash);
+    }
+
+    @Override
+    public boolean seenTitle(String country, String titleHash, Instant since) {
+      Instant at = titlesStored.get(country + "|" + titleHash);
+      return at != null && !at.isBefore(since);
+    }
+  };
 
   private static String story(String url, String title, String summary) {
     return "{\"title\":" + q(title) + ",\"summary\":" + q(summary) + ",\"url\":" + q(url) + "}";
@@ -39,7 +59,7 @@ class StoryFilterTest {
   }
 
   private Result run(boolean grounding, String answer) {
-    return new StoryFilter(checker, grounding).filter(answer, "TL", ALLOWED, GROUNDED);
+    return new StoryFilter(checker, grounding, 7, CLOCK).filter(answer, "TL", ALLOWED, GROUNDED);
   }
 
   private int rejected(Result r, Reason reason) {
@@ -50,7 +70,7 @@ class StoryFilterTest {
   void filterKeepsAnAllowListedGroundedHttpsStoryAndRecordsItsUrlHash() throws Exception {
     Result r = run(true, answer(story("https://www.example.test/a/1/", "T", "S")));
 
-    assertThat(r.kept()).containsExactly(new StoryUrl(StoryFilter.hash("https://www.example.test/a/1"), "https://www.example.test/a/1/"));
+    assertThat(r.kept()).containsExactly(new StoryUrl(StoryFilter.hash("https://www.example.test/a/1"), "https://www.example.test/a/1/", StoryTitle.hash("T")));
     assertThat(JSON.readTree(r.json()).at("/sections/HEALTH")).hasSize(1);
     assertThat(JSON.readTree(r.json()).path("date").asText()).isEqualTo("2026-11-07");
     assertThat(r.rejected().values()).containsOnly(0);
@@ -106,8 +126,8 @@ class StoryFilterTest {
     String notGrounded = story("https://other.test/a", "T", "S");
     List<String> allowed = List.of("example.test", "other.test");
 
-    Result on = new StoryFilter(checker, true).filter(answer(notGrounded), "TL", allowed, GROUNDED);
-    Result off = new StoryFilter(checker, false).filter(answer(notGrounded), "TL", allowed, GROUNDED);
+    Result on = new StoryFilter(checker, true, 7, CLOCK).filter(answer(notGrounded), "TL", allowed, GROUNDED);
+    Result off = new StoryFilter(checker, false, 7, CLOCK).filter(answer(notGrounded), "TL", allowed, GROUNDED);
 
     assertThat(on.kept()).isEmpty();
     assertThat(rejected(on, Reason.HOST)).isEqualTo(1);
@@ -118,14 +138,14 @@ class StoryFilterTest {
   void filterMatchesGroundedDomainsByRegistrableDomainIncludingCountrySuffixes() {
     Result r = run(true, answer(
         story("https://www.sample.co.uk/a", "T", "S"), // grounded as news.sample.co.uk -> sample.co.uk
-        story("https://example.test/b", "T", "S")));
+        story("https://example.test/b", "T2", "S")));
 
     assertThat(r.kept()).hasSize(2);
   }
 
   @Test
   void filterIgnoresGroundingEntriesThatAreNotDomains() {
-    Result r = new StoryFilter(checker, true).filter(answer(story("https://example.test/a", "T", "S")), "TL",
+    Result r = new StoryFilter(checker, true, 7, CLOCK).filter(answer(story("https://example.test/a", "T", "S")), "TL",
         ALLOWED, List.of("Some Page Title", "  ", "https://x"));
 
     assertThat(r.kept()).isEmpty();
@@ -137,7 +157,7 @@ class StoryFilterTest {
     String a = story("https://EXAMPLE.test/a/#top", "T", "S");
 
     Result same = run(true, answer(a));
-    Result other = new StoryFilter(checker, true).filter(answer(a), "XX", ALLOWED, GROUNDED);
+    Result other = new StoryFilter(checker, true, 7, CLOCK).filter(answer(a), "XX", ALLOWED, GROUNDED);
 
     assertThat(same.kept()).isEmpty();
     assertThat(rejected(same, Reason.DUPLICATE)).isEqualTo(1);
@@ -271,18 +291,61 @@ class StoryFilterTest {
 
   @Test
   void collectPropertiesDefaultToRequiringGrounding() {
-    assertThat(new CollectProperties(true).requireGrounding()).isTrue();
-    assertThat(new CollectProperties(false).requireGrounding()).isFalse();
+    assertThat(new CollectProperties(true, 7).requireGrounding()).isTrue();
+    assertThat(new CollectProperties(false, 3).requireGrounding()).isFalse();
+    assertThat(new CollectProperties(false, 3).titleDedupeDays()).isEqualTo(3);
   }
 
   @Test
   void filterWithSkipSiteListKeepsAnyHttpsHostButStillRejectsGoogleAndHttp() {
     String a = answer(story("https://other.test/a", "T", "S"), story("https://www.google.com/url?q=x", "T", "S"), story("http://other.test/b", "T", "S"));
 
-    Result r = new StoryFilter(checker, false).filter(a, "TL", List.of(), List.of(), true);
+    Result r = new StoryFilter(checker, false, 7, CLOCK).filter(a, "TL", List.of(), List.of(), true);
 
     assertThat(r.kept()).extracting(StoryUrl::url).containsExactly("https://other.test/a");
     assertThat(rejected(r, Reason.HOST)).isEqualTo(2);
-    assertThat(new StoryFilter(checker, false).filter(a, "TL", List.of(), List.of()).kept()).isEmpty();
+    assertThat(new StoryFilter(checker, false, 7, CLOCK).filter(a, "TL", List.of(), List.of()).kept()).isEmpty();
+  }
+
+  @Test
+  void filterRejectsATitleStoredWithinTheWindowEvenInOtherCaseAndAccentsButNotAnotherCountry() {
+    titlesStored.put("TL|" + com.contentcreator.news.StoryTitle.hash("Thời tiết hôm nay"), NOW.minusSeconds(6 * 86400));
+    String a = story("https://example.test/new", "THOI TIET, hom nay!", "S");
+
+    Result same = run(true, answer(a));
+    Result other = new StoryFilter(checker, true, 7, CLOCK).filter(answer(a), "XX", ALLOWED, GROUNDED);
+
+    assertThat(same.kept()).isEmpty();
+    assertThat(rejected(same, Reason.DUPLICATE)).isEqualTo(1);
+    assertThat(other.kept()).hasSize(1);
+  }
+
+  @Test
+  void filterKeepsATitleStoredBeforeTheWindow() {
+    titlesStored.put("TL|" + com.contentcreator.news.StoryTitle.hash("Same title"), NOW.minusSeconds(8 * 86400));
+
+    Result r = run(true, answer(story("https://example.test/new", "Same title", "S")));
+
+    assertThat(r.kept()).hasSize(1);
+    assertThat(rejected(r, Reason.DUPLICATE)).isZero();
+  }
+
+  @Test
+  void filterRejectsTheSameNormalizedTitleTwiceInOneAnswerKeepingTheFirst() {
+    Result r = run(true, answer(story("https://example.test/a", "Giá vàng", "S"), story("https://example.test/b", "gia  VANG.", "S")));
+
+    assertThat(r.kept()).extracting(StoryUrl::url).containsExactly("https://example.test/a");
+    assertThat(rejected(r, Reason.DUPLICATE)).isEqualTo(1);
+  }
+
+  @Test
+  void filterGivesKeptUrlsTheirTitleHashAndTreatsUrlsWithAndWithoutTrackingAsOne() {
+    Result r = run(true, answer(story("https://example.test/a?utm_source=x&id=1", "Title A", "S"),
+        story("https://example.test/a?id=1&fbclid=z", "Title B", "S")));
+
+    assertThat(r.kept()).hasSize(1);
+    assertThat(r.kept().get(0).titleHash()).isEqualTo(com.contentcreator.news.StoryTitle.hash("Title A"));
+    assertThat(r.kept().get(0).hash()).isEqualTo(StoryFilter.hash("https://example.test/a?id=1"));
+    assertThat(rejected(r, Reason.DUPLICATE)).isEqualTo(1);
   }
 }

@@ -24,6 +24,8 @@ contentcreator:
     collect:
       # A story's site must also be one Google Search reported (set false only if grounding returns no publisher domains).
       require-grounding: ${CONTENTCREATOR_NEWS_REQUIRE_GROUNDING:true}
+      # The same normalized title for the same country within this many days is a duplicate (FR-506).
+      title-dedupe-days: ${CONTENTCREATOR_NEWS_TITLE_DEDUPE_DAYS:7}
       # The Gemini collection worker's own schedule (Spring cron, 6 fields): every hour on the hour, UTC.
       # The Claude worker keeps its own contentcreator.news.worker.cron below.
       cron: "0 0 * * * *"

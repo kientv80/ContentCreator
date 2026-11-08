@@ -83,7 +83,7 @@ class NewsDraftRepositoryTest {
   }
 
   private static StoryUrl url(String n) {
-    return new StoryUrl(String.format("%064d", Integer.parseInt(n)), "https://example.test/" + n);
+    return new StoryUrl(String.format("%064d", Integer.parseInt(n)), "https://example.test/" + n, String.format("%064d", 1000 + Integer.parseInt(n)));
   }
 
   @Test
@@ -109,7 +109,7 @@ class NewsDraftRepositoryTest {
 
   @Test
   void insertTruncatesAnOverlongUrlToTheColumnLimit() {
-    StoryUrl longUrl = new StoryUrl(url("3").hash(), "https://example.test/" + "a".repeat(2500));
+    StoryUrl longUrl = new StoryUrl(url("3").hash(), "https://example.test/" + "a".repeat(2500), null);
 
     new NewsDraftRepository(jdbc).insert(draft(List.of()), "US", "en", NOW, List.of(longUrl));
 
@@ -172,5 +172,14 @@ class NewsDraftRepositoryTest {
     assertThat(repo.exists(draft(List.of()), "US")).isTrue();
     assertThat(repo.exists(draft(List.of()), "GB")).isFalse();
     assertThat(repo.exists(draft(List.of()))).isFalse(); // the one-argument form means Vietnam
+  }
+
+  @Test
+  void insertWritesTheTitleHashOfEachSourceRowAndNullWhenNone() {
+    new NewsDraftRepository(jdbc).insert(draft(List.of()), "US", "en", NOW, List.of(url("1"), new StoryUrl(url("2").hash(), "https://example.test/2", null)));
+
+    var rows = jdbc.queryForList("SELECT * FROM news_story_source ORDER BY url_hash");
+    assertThat(rows.get(0)).containsEntry("TITLE_HASH", url("1").titleHash());
+    assertThat(rows.get(1).get("TITLE_HASH")).isNull();
   }
 }

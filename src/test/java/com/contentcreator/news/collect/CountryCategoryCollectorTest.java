@@ -71,7 +71,7 @@ class CountryCategoryCollectorTest {
   }
 
   CountryCategoryCollector collector(NewsDraftRepository d, CollectionRunLogRepository r) {
-    return new CountryCategoryCollector(gemini, r, d, new JdbcUrlSeenChecker(jdbc), new CollectProperties(true),
+    return new CountryCategoryCollector(gemini, r, d, new JdbcUrlSeenChecker(jdbc), new CollectProperties(true, 7),
         Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
@@ -316,7 +316,7 @@ class CountryCategoryCollectorTest {
 
   @Test
   void cap_keepsTheFirstNStoriesOfAnArraySectionAndTheirUrls() {
-    List<StoryUrl> kept = List.of(new StoryUrl("h1", "u1"), new StoryUrl("h2", "u2"), new StoryUrl("h3", "u3"));
+    List<StoryUrl> kept = List.of(new StoryUrl("h1", "u1", null), new StoryUrl("h2", "u2", null), new StoryUrl("h3", "u3", null));
 
     CountryCategoryCollector.Capped capped = CountryCategoryCollector.cap(answer(1, 2, 3), kept, 2);
 
@@ -327,7 +327,7 @@ class CountryCategoryCollectorTest {
   @Test
   void cap_worksOnAnItemsObjectAndAcrossSections_andLeavesAShortListAlone() {
     String json = "{\"sections\":{\"stocks\":{\"items\":[" + story(1) + "]},\"world\":[" + story(2) + "],\"odd\":5}}";
-    List<StoryUrl> kept = List.of(new StoryUrl("h1", "u1"), new StoryUrl("h2", "u2"));
+    List<StoryUrl> kept = List.of(new StoryUrl("h1", "u1", null), new StoryUrl("h2", "u2", null));
 
     CountryCategoryCollector.Capped one = CountryCategoryCollector.cap(json, kept, 1);
     CountryCategoryCollector.Capped all = CountryCategoryCollector.cap(json, kept, 10);

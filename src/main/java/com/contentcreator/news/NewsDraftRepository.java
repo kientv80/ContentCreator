@@ -85,8 +85,8 @@ public class NewsDraftRepository {
         for (StoryUrl url : urls) {
           try {
             jdbc.update(
-                "INSERT INTO news_story_source (country_code, url_hash, url, summary_id, created_at) VALUES (?, ?, ?, ?, ?)",
-                country, url.hash(), cut(url.url(), MAX_URL), id, ts);
+                "INSERT INTO news_story_source (country_code, url_hash, url, summary_id, created_at, title_hash) VALUES (?, ?, ?, ?, ?, ?)",
+                country, url.hash(), cut(url.url(), MAX_URL), id, ts, url.titleHash());
           } catch (DuplicateKeyException e) {
             duplicate.set(true);
             status.setRollbackOnly();
