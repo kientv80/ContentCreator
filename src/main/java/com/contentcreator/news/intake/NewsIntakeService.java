@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
  * {@link NewsDraftRepository#insert} stores it with its country, language and source URLs in one transaction.
  */
 @Service
-@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank()")
+@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank() || !'${contentcreator.news.intake.allowed-cidrs:}'.isBlank()")
 public class NewsIntakeService {
 
   /** Outcome of one intake call. */

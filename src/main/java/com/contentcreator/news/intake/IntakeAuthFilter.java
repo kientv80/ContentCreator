@@ -18,11 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Guards {@code POST /api/v1/news-bulletins}: counts the attempt against the client's rate limit (failed attempts
- * count too), then checks {@code Authorization: Bearer <token>} by comparing the token's SHA-256 with the configured
+ * count too), then lets the request through when the caller's address is inside an allowed range, or else checks {@code Authorization: Bearer <token>} by comparing the token's SHA-256 with the configured
  * hash in constant time. Runs before the body is read. A failure answers 401 with an empty body and logs only the address.
  */
 @Component
-@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank()")
+@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank() || !'${contentcreator.news.intake.allowed-cidrs:}'.isBlank()")
 public class IntakeAuthFilter extends OncePerRequestFilter {
 
   /** The one path this filter protects. */
@@ -30,6 +30,7 @@ public class IntakeAuthFilter extends OncePerRequestFilter {
   private static final Logger log = LoggerFactory.getLogger(IntakeAuthFilter.class);
 
   private final byte[] expected;
+  private final IpRanges allowedRanges;
   private final boolean trustProxy;
   private final IntakeRateLimiter limiter;
 
@@ -39,11 +40,15 @@ public class IntakeAuthFilter extends OncePerRequestFilter {
    * @throws IllegalStateException when the configured hash is not 64 hex characters (the value is not echoed)
    */
   public IntakeAuthFilter(NewsIntakeProperties props, IntakeRateLimiter limiter) {
-    String hex = props.tokenSha256().trim();
-    if (!hex.matches("[0-9a-fA-F]{64}")) {
+    String hex = props.tokenSha256() == null ? "" : props.tokenSha256().trim();
+    if (hex.isEmpty()) {
+      this.expected = null; // no token configured: only the allowed address ranges can pass
+    } else if (hex.matches("[0-9a-fA-F]{64}")) {
+      this.expected = HexFormat.of().parseHex(hex);
+    } else {
       throw new IllegalStateException("contentcreator.news.intake.token-sha256 must be 64 hex characters");
     }
-    this.expected = HexFormat.of().parseHex(hex);
+    this.allowedRanges = IpRanges.parse(props.allowedCidrs());
     this.trustProxy = props.trustProxy();
     this.limiter = limiter;
   }
@@ -66,12 +71,24 @@ public class IntakeAuthFilter extends OncePerRequestFilter {
       log.info("news_intake_rejected reason=rate_limited ip={}", ip);
       return;
     }
-    if (!tokenMatches(request.getHeader("Authorization"))) {
+    if (!allowedByAddress(ip) && !tokenMatches(request.getHeader("Authorization"))) {
       log.info("news_intake_unauthorized ip={} reason={}", ip, rejectReason(request.getHeader("Authorization")));
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       return;
     }
     chain.doFilter(request, response);
+  }
+
+  /**
+   * Whether the caller's address is inside one of the configured ranges (then no token is needed). The address is the
+   * connection address, or with trust-proxy the right-most {@code X-Forwarded-For} value that the edge added, so a
+   * caller cannot invent it.
+   *
+   * @param ip the client address from {@link #clientAddress(HttpServletRequest)}
+   * @return true when allowed by address
+   */
+  boolean allowedByAddress(String ip) {
+    return !allowedRanges.isEmpty() && allowedRanges.contains(ip);
   }
 
   /**
@@ -99,7 +116,7 @@ public class IntakeAuthFilter extends OncePerRequestFilter {
    * @return true only for {@code Bearer <token>} whose SHA-256 equals the configured hash
    */
   boolean tokenMatches(String header) {
-    if (header == null || header.length() < 8 || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+    if (expected == null || header == null || header.length() < 8 || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
       return false;
     }
     String token = header.substring(7).trim();

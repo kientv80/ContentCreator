@@ -270,8 +270,9 @@ class NewsFileParserTest {
   }
 
   @Test
-  void aFileParsedWithALanguageKeepsTheFileHeadings() throws IOException {
-    assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS, "en").get(0).headline()).isEqualTo("Tin trong nước");
+  void aFileParsedAsEnglishGetsEnglishHeadingsAndOtherwiseTheVietnameseOnes() throws IOException {
+    assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS, "en").get(0).headline()).isEqualTo("Domestic news");
+    assertThat(NewsFileParser.parse(sample(), TODAY, PRESETS, "vi").get(0).headline()).isEqualTo("Tin trong nước");
   }
 
   @Test

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 /** In-memory fixed-window request counter per client address (one window is one hour). */
 @Component
-@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank()")
+@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank() || !'${contentcreator.news.intake.allowed-cidrs:}'.isBlank()")
 public class IntakeRateLimiter {
 
   static final long WINDOW_MILLIS = 3_600_000L;

@@ -36,6 +36,12 @@ public final class NewsFileParser {
       "stocks", "Tin chứng khoán",
       "science_tech", "Tin khoa học & công nghệ");
 
+  private static final Map<String, String> HEADINGS_EN = Map.of(
+      "domestic", "Domestic news",
+      "world", "World news",
+      "stocks", "Stock market news",
+      "science_tech", "Science & technology news");
+
   private NewsFileParser() {}
 
   /**
@@ -106,7 +112,7 @@ public final class NewsFileParser {
         Optional<NewsCategory> category = categories.apply(code(name));
         String code = category.map(NewsCategory::code).orElse(NewsDraft.OTHER);
         String headline = stamp == null
-            ? heading(name, shown, category.orElse(null))
+            ? heading(name, shown, category.orElse(null), language)
             : collectedHeadline(name, category.orElse(null), language, stamp);
         drafts.add(new NewsDraft(cut(headline, MAX_HEADLINE), written.text(), day, code, written.extras()));
       }
@@ -125,13 +131,27 @@ public final class NewsFileParser {
     return name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "_");
   }
 
-  /** The preset heading for the four known sections; else "Tin" and the category name; else a generic one. */
-  private static String heading(String name, LocalDate shown, NewsCategory category) {
-    String generic = category == null
-        ? "Tin " + name.replace('_', ' ')
-        : "Tin " + category.nameVi().toLowerCase(Locale.ROOT);
-    String base = HEADINGS.getOrDefault(name, generic);
-    return "stocks".equals(name) ? base + String.format(" (phiên gần nhất %02d/%02d)", shown.getDayOfMonth(), shown.getMonthValue()) : base;
+  /**
+   * The preset heading for the four known sections; else the category name with "Tin" (Vietnamese) or "news"
+   * (English); else a generic one. English bulletins get English headings; a stock section also names the session day.
+   */
+  private static String heading(String name, LocalDate shown, NewsCategory category, String language) {
+    boolean en = "en".equals(language);
+    String generic;
+    if (en) {
+      generic = (category == null ? name.replace('_', ' ') : category.nameEn()) + " news";
+    } else {
+      generic = category == null
+          ? "Tin " + name.replace('_', ' ')
+          : "Tin " + category.nameVi().toLowerCase(Locale.ROOT);
+    }
+    String base = (en ? HEADINGS_EN : HEADINGS).getOrDefault(name, generic);
+    if (!"stocks".equals(name)) {
+      return base;
+    }
+    return en
+        ? base + String.format(" (latest session %02d/%02d)", shown.getMonthValue(), shown.getDayOfMonth())
+        : base + String.format(" (phiên gần nhất %02d/%02d)", shown.getDayOfMonth(), shown.getMonthValue());
   }
 
   /** "{category name in the language} · HH:mm dd/MM"; the category name falls back to the section name when the category is unknown. */

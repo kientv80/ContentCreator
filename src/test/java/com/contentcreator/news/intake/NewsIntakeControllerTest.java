@@ -85,7 +85,7 @@ class NewsIntakeControllerTest {
     IntakeTestData.country(jdbc, "US");
 
     mvc.perform(valid(bulletin("\"country\":\"US\",\"language\":\"en\",", story("A", "https://one.test/a"), story("B", "https://one.test/b"))))
-        .andExpect(status().isCreated())
+        .andExpect(status().isCreated()).andExpect(jsonPath("$.type").value("news"))
         .andExpect(jsonPath("$.received").value(2))
         .andExpect(jsonPath("$.stored").value(2))
         .andExpect(jsonPath("$.skipped").value(0))
@@ -114,8 +114,8 @@ class NewsIntakeControllerTest {
     jdbc.update("DELETE FROM news_story_extra");
     jdbc.update("DELETE FROM news_summary");
 
-    assertThat(logLines()).filteredOn(l -> l.startsWith("news_intake_unauthorized")).containsExactly(
-        "news_intake_unauthorized ip=" + address, "news_intake_unauthorized ip=" + address);
+    assertThat(logLines()).filteredOn(l -> l.startsWith("news_intake_unauthorized")).hasSize(2).allMatch(
+        l -> l.startsWith("news_intake_unauthorized ip=" + address + " reason="));
     assertThat(logLines()).noneMatch(l -> l.contains(TOKEN) || l.contains(HASH) || l.contains("fake-intake-token-0001"));
   }
 

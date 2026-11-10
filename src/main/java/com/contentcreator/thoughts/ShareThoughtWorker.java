@@ -12,7 +12,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
@@ -50,12 +49,14 @@ public class ShareThoughtWorker {
   private final ThoughtProperties props;
   private final ThoughtRepository repository;
   private final Clock clock;
+  private final LetterStore store;
   private final AtomicBoolean running = new AtomicBoolean();
 
   public ShareThoughtWorker(ThoughtProperties props, ThoughtRepository repository, Clock clock) {
     this.props = props;
     this.repository = repository;
     this.clock = clock;
+    this.store = new LetterStore(repository);
   }
 
   /** Runs one scan every poll interval when the worker is enabled. */
@@ -141,17 +142,7 @@ public class ShareThoughtWorker {
       return 0;
     }
     try {
-      int stored = 0;
-      Instant base = clock.instant();
-      // newest first in the feed: insert the last post first so Post 1 gets the latest created_at
-      for (int i = posts.size() - 1; i >= 0; i--) {
-        String post = posts.get(i);
-        if (repository.existsPost(writer.get(), day, post.lines().findFirst().orElse(post))) {
-          continue;
-        }
-        repository.insertPending(writer.get(), post, day, base.plusSeconds(posts.size() - 1 - i));
-        stored++;
-      }
+      int stored = store.store(writer.get(), day, posts, clock.instant());
       move(dir, file, "processed");
       log.info("thought_done file={} posts={} stored={}", name, posts.size(), stored);
       return stored;

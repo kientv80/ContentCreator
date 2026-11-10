@@ -22,21 +22,24 @@ import org.springframework.web.bind.annotation.RestController;
  * earlier, in {@link IntakeAuthFilter}.
  */
 @RestController
-@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank()")
+@ConditionalOnExpression("!'${contentcreator.news.intake.token-sha256:}'.isBlank() || !'${contentcreator.news.intake.allowed-cidrs:}'.isBlank()")
 public class NewsIntakeController {
 
   private static final Logger log = LoggerFactory.getLogger(NewsIntakeController.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final NewsIntakeService service;
+  private final LetterIntakeService letters;
   private final int maxBytes;
 
   /**
    * @param service stores the bulletin
+   * @param letters stores a letter for Shared Thoughts
    * @param props supplies the body limit
    */
-  public NewsIntakeController(NewsIntakeService service, NewsIntakeProperties props) {
+  public NewsIntakeController(NewsIntakeService service, LetterIntakeService letters, NewsIntakeProperties props) {
     this.service = service;
+    this.letters = letters;
     this.maxBytes = props.maxBytes();
   }
 
@@ -67,6 +70,14 @@ public class NewsIntakeController {
       log.info("news_intake_rejected reason=not_a_json_object");
       return ResponseEntity.badRequest().body(Map.of("error", "invalid_body", "message", "The body must be a JSON object."));
     }
+    IntakeTypeDetector.Type type = IntakeTypeDetector.detect(root);
+    if (type == IntakeTypeDetector.Type.AMBIGUOUS) {
+      log.info("news_intake_rejected reason=ambiguous_type");
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "ambiguous_type"));
+    }
+    if (type == IntakeTypeDetector.Type.LETTER) {
+      return letter(letters.process(root));
+    }
     NewsIntakeService.Result r = service.process(root);
     return switch (r.status()) {
       case UNKNOWN_COUNTRY -> ResponseEntity.badRequest().body(Map.of("error", "unknown_country", "message", "Unknown country."));
@@ -77,6 +88,30 @@ public class NewsIntakeController {
     };
   }
 
+  /** Maps a letter outcome to its HTTP answer (FR-573). */
+  private static ResponseEntity<Map<String, Object>> letter(LetterIntakeService.Result r) {
+    return switch (r.status()) {
+      case INVALID_LANGUAGE -> ResponseEntity.badRequest().body(Map.of("error", "invalid_language", "message", "Unknown language."));
+      case INVALID_BODY -> ResponseEntity.badRequest().body(Map.of("error", "invalid_body", "message", "The date must be yyyy-MM-dd."));
+      case WRITER_MISSING -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "writer_account_missing"));
+      case NO_VALID_POST -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "no_valid_post"));
+      case CREATED -> ResponseEntity.status(HttpStatus.CREATED).body(letterCounts(r));
+      case ALREADY_STORED -> ResponseEntity.ok(letterCounts(r));
+    };
+  }
+
+  private static Map<String, Object> letterCounts(LetterIntakeService.Result r) {
+    Map<String, Object> out = new LinkedHashMap<>();
+    out.put("type", "letter");
+    out.put("received", r.received());
+    out.put("stored", r.stored());
+    out.put("skipped", r.skipped());
+    List<Map<String, Object>> rejected = r.duplicates() > 0
+        ? List.of(Map.<String, Object>of("reason", "duplicate", "count", r.duplicates())) : List.of();
+    out.put("rejected", rejected);
+    return out;
+  }
+
   private ResponseEntity<Map<String, Object>> tooLarge() {
     log.info("news_intake_rejected reason=too_large");
     return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("error", "too_large"));
@@ -84,6 +119,7 @@ public class NewsIntakeController {
 
   private static Map<String, Object> counts(NewsIntakeService.Result r) {
     Map<String, Object> out = new LinkedHashMap<>();
+    out.put("type", "news");
     out.put("received", r.received());
     out.put("stored", r.stored());
     out.put("skipped", r.skipped());
